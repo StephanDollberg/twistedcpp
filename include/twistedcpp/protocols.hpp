@@ -1,8 +1,6 @@
 #ifndef TWISTED_PROTOCOLS
 #define TWISTED_PROTOCOLS
 
-using boost::asio::ip::tcp;
-
 namespace twisted {
 
 template<typename ChildProtocol>

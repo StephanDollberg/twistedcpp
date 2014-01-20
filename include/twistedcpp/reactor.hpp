@@ -11,14 +11,11 @@
 #include <memory>
 #include <iterator>
 
-using boost::asio::ip::tcp;
-
 namespace twisted {
-
-
 
 template<typename Protocol, typename ...ProtocolArgs>
 void run(int port, ProtocolArgs&&... protocol_args) {
+    using boost::asio::ip::tcp;
 
     boost::asio::io_service io_service;
 
