@@ -19,7 +19,7 @@ public:
     }
 
     void run_protocol() {
-        auto self = static_cast<ChildProtocol*>(this)->shared_from_this();
+        auto self = this_protocol().shared_from_this();
         boost::asio::spawn(*_strand, [this, self] (boost::asio::yield_context yield) {
             _yield = boost::in_place(yield);
 
@@ -28,7 +28,7 @@ public:
                 for(;;) {
                     auto bytes_read = _socket->async_read_some(
                         boost::asio::buffer(buffer), yield);
-                    static_cast<ChildProtocol*>(this)->on_message(
+                    this_protocol().on_message(
                         buffer.begin(), std::next(buffer.begin(), bytes_read));
                 }
             } catch (std::exception& e) {
@@ -46,6 +46,15 @@ public:
     }
 
 private:
+
+    ChildProtocol& this_protocol() {
+        return *static_cast<ChildProtocol*>(this);
+    } 
+
+    const ChildProtocol& this_protocol() const {
+        return *static_cast<ChildProtocol*>(this);
+    } 
+
     boost::optional<boost::asio::yield_context> _yield;
     std::unique_ptr<socket_type> _socket; // unique_ptr as boost::optional has no move support
     boost::optional<timer_type> _timer;
