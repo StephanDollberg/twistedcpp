@@ -1,15 +1,18 @@
 #ifndef TWISTEDCPP_REACTOR_HPP
 #define TWISTEDCPP_REACTOR_HPP
 
+#include "exception.hpp"
+
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/container/deque.hpp>
+#include <boost/system/system_error.hpp>
 #include <iostream>
 #include <memory>
 #include <iterator>
+
 
 namespace twisted {
 
@@ -35,6 +38,9 @@ void run(int port, ProtocolArgs&&... protocol_args) {
                     // lazy init to avoid clutter in protocol constructors
                     new_client->set_socket(std::move(socket));
                     new_client->run_protocol();
+                }
+                else {
+                    throw boost::system::system_error(ec);
                 }
             }
         });
