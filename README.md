@@ -12,8 +12,8 @@ Note: Everything is very very alpha, yet.
 class echo_protocol: public twisted::basic_protocol<echo_protocol> {
 public:
     template<typename Iter>
-    void handle_read(Iter begin, Iter end) {
-        write(begin, end);
+    void on_message(Iter begin, Iter end) {
+        send_message(begin, end);
     }
 };
 
