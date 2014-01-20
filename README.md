@@ -6,8 +6,8 @@ Note: Everything is very very alpha, yet.
 
 
 ``` cpp
-#include "reactor.hpp"
-#include "protocols.hpp"
+#include <twistedcpp/reactor.hpp>
+#include <twistedcpp/protocols.hpp>
 
 class echo_protocol: public twisted::basic_protocol<echo_protocol> {
 public:
