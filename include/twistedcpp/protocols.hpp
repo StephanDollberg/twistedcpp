@@ -28,7 +28,7 @@ public:
                 for(;;) {
                     auto bytes_read = _socket->async_read_some(
                         boost::asio::buffer(buffer), yield);
-                    static_cast<ChildProtocol*>(this)->handle_read(
+                    static_cast<ChildProtocol*>(this)->on_message(
                         buffer.begin(), std::next(buffer.begin(), bytes_read));
                 }
             } catch (std::exception& e) {
@@ -38,7 +38,7 @@ public:
     }
 
     template<typename Iter>
-    void write(Iter begin, Iter end) {
+    void send_message(Iter begin, Iter end) {
         boost::asio::async_write(
             *_socket,
             boost::asio::buffer(&*begin, std::distance(begin, end)),
