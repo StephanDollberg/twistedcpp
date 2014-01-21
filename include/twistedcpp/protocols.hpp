@@ -25,7 +25,7 @@ public:
 
             std::vector<char> buffer(1024, '\0');
             try {
-                for(;;) {
+                for(;_socket->is_open();) {
                     auto bytes_read = _socket->async_read_some(
                         boost::asio::buffer(buffer), yield);
                     checked_on_message(buffer.begin(), std::next(buffer.begin(), bytes_read));
@@ -48,8 +48,14 @@ public:
     }
 
     void on_disconnect() {}
+
     void on_error(std::exception_ptr eptr) {
         std::rethrow_exception(eptr);
+    }
+
+    void lose_connection() {
+        _socket->close();
+        std::cout << "Closing connection to client" << std::endl;
     }
 
 private:
