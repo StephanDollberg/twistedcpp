@@ -33,6 +33,7 @@ public:
                 }
             } catch (boost::system::system_error& connection_error) {
                 print_connection_error(connection_error);
+                this_protocol().on_disconnect();
             }
         });
     }
@@ -45,6 +46,8 @@ public:
             *_yield);
     }
 
+    void on_disconnect() {}
+
 private:
     void print_connection_error(const boost::system::system_error& connection_error) const {
         std::cerr << "Client disconnected with code " 
@@ -52,10 +55,16 @@ private:
                   << std::endl;
     }
 
+    /*
+     * @brief CRTP wrapper for derived class access
+     */
     ChildProtocol& this_protocol() {
         return *static_cast<ChildProtocol*>(this);
     } 
 
+    /*
+     * @brief CRTP wrapper for derived class access
+     */
     const ChildProtocol& this_protocol() const {
         return *static_cast<ChildProtocol*>(this);
     } 
