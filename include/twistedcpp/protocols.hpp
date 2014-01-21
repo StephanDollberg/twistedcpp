@@ -31,8 +31,8 @@ public:
                     this_protocol().on_message(
                         buffer.begin(), std::next(buffer.begin(), bytes_read));
                 }
-            } catch (std::exception& e) {
-                std::cout << "Exception in basic_protocol" << std::endl;
+            } catch (boost::system::system_error& connection_error) {
+                print_connection_error(connection_error);
             }
         });
     }
@@ -46,6 +46,11 @@ public:
     }
 
 private:
+    void print_connection_error(const boost::system::system_error& connection_error) const {
+        std::cerr << "Client disconnected with code " 
+                  << connection_error.what() 
+                  << std::endl;
+    }
 
     ChildProtocol& this_protocol() {
         return *static_cast<ChildProtocol*>(this);
