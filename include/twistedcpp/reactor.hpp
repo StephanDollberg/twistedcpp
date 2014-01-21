@@ -33,7 +33,7 @@ void run(int port, ProtocolArgs&&... protocol_args) {
                 tcp::socket socket(io_service);
                 acceptor.async_accept(socket, yield[ec]);
                 if (!ec) {
-                    auto new_client = 
+                    auto new_client =
                         std::make_shared<Protocol>(std::forward<ProtocolArgs>(protocol_args)...);
                     // lazy init to avoid clutter in protocol constructors
                     new_client->set_socket(std::move(socket));
@@ -50,4 +50,4 @@ void run(int port, ProtocolArgs&&... protocol_args) {
 
 }
 
-#endif 
+#endif

@@ -54,8 +54,8 @@ public:
 
 private:
     void print_connection_error(const boost::system::system_error& connection_error) const {
-        std::cerr << "Client disconnected with code " 
-                  << connection_error.what() 
+        std::cerr << "Client disconnected with code "
+                  << connection_error.what()
                   << std::endl;
     }
 
@@ -79,14 +79,14 @@ private:
      */
     ChildProtocol& this_protocol() {
         return *static_cast<ChildProtocol*>(this);
-    } 
+    }
 
     /*
      * @brief CRTP wrapper for derived class access
      */
     const ChildProtocol& this_protocol() const {
         return *static_cast<ChildProtocol*>(this);
-    } 
+    }
 
     boost::optional<boost::asio::yield_context> _yield;
     std::unique_ptr<socket_type> _socket; // unique_ptr as boost::optional has no move support
