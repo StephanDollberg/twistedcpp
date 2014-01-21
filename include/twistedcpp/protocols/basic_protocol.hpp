@@ -1,5 +1,5 @@
-#ifndef TWISTED_PROTOCOLS
-#define TWISTED_PROTOCOLS
+#ifndef TWISTEDCPP_BASIC_PROTOCOL
+#define TWISTEDCPP_BASIC_PROTOCOL
 
 namespace twisted {
 
