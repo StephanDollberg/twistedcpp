@@ -30,7 +30,7 @@ public:
                         boost::asio::buffer(buffer), yield);
                     checked_on_message(buffer.begin(), std::next(buffer.begin(), bytes_read));
                 }
-            } catch (boost::system::system_error& connection_error) { // network errors
+            } catch(boost::system::system_error& connection_error) { // network errors
                 print_connection_error(connection_error);
                 this_protocol().on_disconnect();
             } catch(const std::exception& excep) { // errors from user protocols
