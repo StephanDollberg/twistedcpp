@@ -55,6 +55,14 @@ public:
             *_yield);
     }
 
+    template<typename BuffersType>
+    void send_buffers(const BuffersType& buffers) {
+        boost::asio::async_write(
+            *_socket,
+            buffers,
+            *_yield);
+    }
+
     void on_disconnect() {}
 
     void on_error(std::exception_ptr eptr) {
@@ -96,6 +104,7 @@ private:
         }
     }
 
+protected:
     /*
      * @brief CRTP wrapper for derived class access
      */
@@ -110,7 +119,6 @@ private:
         return *static_cast<ChildProtocol*>(this);
     }
 
-protected:
     buffer_type _read_buffer;
     buffer_iterator _read_index;
 private:
