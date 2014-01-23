@@ -6,8 +6,6 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/spawn.hpp>
-#include <boost/asio/steady_timer.hpp>
-#include <boost/asio/write.hpp>
 #include <boost/system/system_error.hpp>
 #include <iostream>
 #include <memory>
@@ -16,21 +14,21 @@
 
 namespace twisted {
 
+typedef boost::asio::io_service reactor;
+
 template<typename Protocol, typename ...ProtocolArgs>
-void run(int port, ProtocolArgs&&... protocol_args) {
+void run_impl(reactor& reac, int port, ProtocolArgs&&... protocol_args) {
     using boost::asio::ip::tcp;
 
-    boost::asio::io_service io_service;
-
-    boost::asio::spawn(io_service,
+    boost::asio::spawn(reac,
         [&](boost::asio::yield_context yield)
         {
-            tcp::acceptor acceptor(io_service,
+            tcp::acceptor acceptor(reac,
                 tcp::endpoint(tcp::v4(), port));
 
             for (;;) {
                 boost::system::error_code ec;
-                tcp::socket socket(io_service);
+                tcp::socket socket(reac);
                 acceptor.async_accept(socket, yield[ec]);
                 if (!ec) {
                     auto new_client =
@@ -44,8 +42,18 @@ void run(int port, ProtocolArgs&&... protocol_args) {
                 }
             }
         });
+}
 
-    io_service.run();
+template<typename Protocol, typename ...ProtocolArgs>
+void run(reactor& reac, int port, ProtocolArgs&&... protocol_args) {
+    run_impl<Protocol>(reac, port, std::forward<ProtocolArgs>(protocol_args)...);
+}
+
+template<typename Protocol, typename ...ProtocolArgs>
+void run(int port, ProtocolArgs&&... protocol_args) {
+    reactor reac;
+    run_impl<Protocol>(reac, port, std::forward<ProtocolArgs>(protocol_args)...);
+    reac.run();
 }
 
 }
