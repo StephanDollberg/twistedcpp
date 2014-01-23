@@ -1,46 +1,48 @@
 #include "catch/single_include/catch.hpp"
 
 #include "../include/twistedcpp/protocols/line_receiver.hpp"
+#include "../include/twistedcpp/reactor.hpp"
+
+#include <boost/asio/read.hpp>
 
 #include <vector>
 #include <string>
+#include <future>
 
-struct test_protocol : twisted::line_receiver<test_protocol> {
-    test_protocol(std::vector<std::string> results, std::vector<char> test_data)
-        : _results(std::move(results)), current_index(0) {
-            _read_buffer = test_data;
-            _read_index = _read_buffer.begin();
-        }
+using boost::asio::ip::tcp;
 
+struct line_receiver_test : twisted::line_receiver<line_receiver_test>  {
     template<typename Iter>
     void line_received(Iter begin, Iter end) {
-        std::copy(begin, end, std::ostream_iterator<char>(std::cout, " | "));
-        std::cout << std::endl;
-        std::copy(_results[current_index].begin(), _results[current_index].end(), std::ostream_iterator<char>(std::cout, " | "));
-        std::cout << std::endl;
-        CHECK(std::equal(begin, end,
-            _results[current_index++].begin()));
-        std::copy(begin, end, std::ostream_iterator<char>(std::cout, " | "));
-        std::cout << std::endl;
+        send_line(begin, end);
     }
-
-    std::vector<std::string> _results;
-    int current_index;
-
 };
 
-TEST_CASE("line_receiver::on_message", "[line_receiver][protocols]") {
+TEST_CASE("line_receiver behaviour tests", "[line_receiver][protocols]") {
     SECTION("perfect match") {
         std::vector<std::string> test_results;
         test_results.push_back("AAA");
         test_results.push_back("BBB");
 
+        twisted::reactor reac;
+        auto fut = std::async([&]() {
+            twisted::run<line_receiver_test>(reac, 12345);
+            reac.run();
+        });
 
-        std::string test_data_str("AAA\r\nBBB\r\n");
-        std::vector<char> test_data(test_data_str.begin(), test_data_str.end());
+        boost::asio::io_service io_service;
+        std::string test_data("AAA\r\nBBB\r\n");
 
-        test_protocol tester(std::move(test_results), test_data);
+        tcp::socket socket(io_service);
+        socket.connect(tcp::endpoint(
+            boost::asio::ip::address::from_string("127.0.0.1"), 12345));
 
-        tester.on_message(test_data.begin(), test_data.end());
+        boost::asio::write(socket, boost::asio::buffer(test_data));
+        std::vector<char> result(test_data.size());
+
+        boost::asio::read(socket, boost::asio::buffer(result));
+        CHECK(std::equal(test_data.begin(), test_data.end(), result.begin()));
+        reac.stop();
+        fut.get();
     }
 }
