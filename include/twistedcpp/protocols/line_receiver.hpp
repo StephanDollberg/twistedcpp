@@ -32,10 +32,10 @@ public:
 
     template<typename Iter>
     void send_line(Iter begin, Iter end) {
-        std::array<boost::asio::const_buffer, 2> buffers = {
+        std::array<boost::asio::const_buffer, 2> buffers{ {
             boost::asio::buffer(&*begin, std::distance(begin, end)),
             boost::asio::buffer(&*delimiter.begin(), delimiter.size())
-        };
+        } };
 
         this->send_buffers(buffers);
     }
