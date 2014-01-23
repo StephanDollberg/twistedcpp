@@ -1,6 +1,12 @@
 #ifndef TWISTEDCPP_BASIC_PROTOCOL
 #define TWISTEDCPP_BASIC_PROTOCOL
 
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/optional.hpp>
+#include <boost/asio/spawn.hpp>
+#include <boost/asio/write.hpp>
+
 namespace twisted {
 
 template<typename ChildProtocol>
