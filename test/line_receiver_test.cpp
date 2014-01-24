@@ -49,14 +49,73 @@ void messsage_tester(const std::vector<std::string>& send_input, const std::vect
     });
 }
 
-TEST_CASE("line_receiver behaviour tests", "[line_receiver][protocols]") {
-    SECTION("perfect match") {
+TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]") {
+    SECTION("perfect match 2 in 1") {
         std::vector<std::string> test_data;
         test_data.push_back("AAA\r\nBBB\r\n");
 
         std::vector<std::string> test_results;
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
+
+        messsage_tester(test_data, test_results);
+    }
+
+    SECTION("perfect match 2 on 2") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAA\r\n");
+        test_data.push_back("BBB\r\n");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AAA\r\n");
+        test_results.push_back("BBB\r\n");
+
+        messsage_tester(test_data, test_results);
+    }
+
+    SECTION("open match 2 in 1") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAA\r\nBBB\r\nCCC");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AAA\r\n");
+        test_results.push_back("BBB\r\n");
+
+        messsage_tester(test_data, test_results);
+    }
+
+    SECTION("open match 2 on 2") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAA\r\n");
+        test_data.push_back("BBB\r\n");
+        test_data.push_back("CCC");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AAA\r\n");
+        test_results.push_back("BBB\r\n");
+
+        messsage_tester(test_data, test_results);
+    }
+
+    SECTION("end match 3 on 1") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAA");
+        test_data.push_back("BBB");
+        test_data.push_back("CCC\r\n");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AAABBBCCC\r\n");
+
+        messsage_tester(test_data, test_results);
+    }
+
+    SECTION("no match 2 on 0") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAA");
+        test_data.push_back("BBB");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("");
 
         messsage_tester(test_data, test_results);
     }
