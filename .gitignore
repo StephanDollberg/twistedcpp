@@ -13,3 +13,9 @@
 *.a
 
 test/test_main
+
+main
+
+main.cpp
+
+makefile
