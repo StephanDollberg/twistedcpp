@@ -20,12 +20,15 @@ struct line_receiver_test : twisted::line_receiver<line_receiver_test>  {
     }
 };
 
-void messsage_tester(const std::vector<std::string>& send_input, const std::vector<std::string>& results) {
+void message_tester(const std::vector<std::string>& send_input, const std::vector<std::string>& results) {
     twisted::reactor reac;
     auto fut = std::async([&]() {
         twisted::run<line_receiver_test>(reac, 12345);
         reac.run();
     });
+
+    boost::asio::io_service io_service;
+    tcp::socket socket(io_service);
 
     BOOST_SCOPE_EXIT((&reac)) {
         reac.stop();
@@ -33,12 +36,11 @@ void messsage_tester(const std::vector<std::string>& send_input, const std::vect
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-    boost::asio::io_service io_service;
-    tcp::socket socket(io_service);
     socket.connect(tcp::endpoint(
         boost::asio::ip::address::from_string("127.0.0.1"), 12345));
 
     boost::for_each(send_input, [&] (const std::string& input) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
         boost::asio::write(socket, boost::asio::buffer(input));
     });
 
@@ -58,7 +60,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        messsage_tester(test_data, test_results);
+        message_tester(test_data, test_results);
     }
 
     SECTION("perfect match 2 on 2") {
@@ -70,7 +72,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        messsage_tester(test_data, test_results);
+        message_tester(test_data, test_results);
     }
 
     SECTION("open match 2 in 1") {
@@ -81,7 +83,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        messsage_tester(test_data, test_results);
+        message_tester(test_data, test_results);
     }
 
     SECTION("open match 2 on 2") {
@@ -94,7 +96,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        messsage_tester(test_data, test_results);
+        message_tester(test_data, test_results);
     }
 
     SECTION("end match 3 on 1") {
@@ -106,7 +108,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         std::vector<std::string> test_results;
         test_results.push_back("AAABBBCCC\r\n");
 
-        messsage_tester(test_data, test_results);
+        message_tester(test_data, test_results);
     }
 
     SECTION("no match 2 on 0") {
@@ -117,6 +119,6 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         std::vector<std::string> test_results;
         test_results.push_back("");
 
-        messsage_tester(test_data, test_results);
+        message_tester(test_data, test_results);
     }
 }
