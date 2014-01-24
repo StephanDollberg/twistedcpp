@@ -19,3 +19,5 @@ main
 main.cpp
 
 makefile
+
+test/stress.sh
