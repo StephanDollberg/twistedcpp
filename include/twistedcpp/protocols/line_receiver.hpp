@@ -21,15 +21,12 @@ public:
         _line_buffer.insert(_line_buffer.end(), begin, end);
 
         auto line_start = _line_buffer.begin();
-        auto search_iter = std::search(
-            _line_buffer.begin(), _line_buffer.end(), delimiter.begin(), delimiter.end());
-
+        auto search_iter = find_next(_line_buffer.begin(), _line_buffer.end());
 
         while(search_iter != _line_buffer.end()) {
             this->this_protocol().line_received(line_start, search_iter);
             line_start = std::next(search_iter, delimiter.size());
-            search_iter = std::search(
-                line_start, _line_buffer.end(), delimiter.begin(), delimiter.end());
+            search_iter = find_next(line_start, _line_buffer.end());
         }
 
         _line_buffer.assign(line_start, _line_buffer.end());
@@ -46,6 +43,12 @@ public:
     }
 
 private:
+    template<typename Iter>
+    Iter find_next(Iter begin, Iter end) const {
+        return std::search(
+            begin, end, delimiter.begin(), delimiter.end());
+    }
+
     const std::string delimiter;
     std::vector<char> _line_buffer;
 };
