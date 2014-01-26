@@ -3,6 +3,10 @@
 
 #include "basic_protocol.hpp"
 
+#include <boost/tokenizer.hpp>
+
+#include <deque>
+
 namespace twisted {
 
 template<typename ChildProtocol>
@@ -14,25 +18,21 @@ public:
 
     template<typename Iter>
     void on_message(Iter begin, Iter end) {
-        auto search_iter =
-            std::search(begin, end, delimiter.begin(), delimiter.end());
-        auto next_iter = begin;
-        auto line_start = this->_read_buffer.begin();
+        _line_buffer.insert(_line_buffer.end(), begin, end);
 
-        while(search_iter != end) {
+        auto line_start = _line_buffer.begin();
+        auto search_iter = std::search(
+            _line_buffer.begin(), _line_buffer.end(), delimiter.begin(), delimiter.end());
+
+
+        while(search_iter != _line_buffer.end()) {
             this->this_protocol().line_received(line_start, search_iter);
-            next_iter = std::next(search_iter, delimiter.size());
-            search_iter =
-                std::search(next_iter, end, delimiter.begin(), delimiter.end());
-                line_start = next_iter;
+            line_start = std::next(search_iter, delimiter.size());
+            search_iter = std::search(
+                line_start, _line_buffer.end(), delimiter.begin(), delimiter.end());
         }
 
-        if(next_iter != begin) {
-            this->_read_index = std::copy(next_iter, end, this->_read_buffer.begin());
-        }
-        else {
-            this->_read_index = end;
-        }
+        _line_buffer.assign(line_start, _line_buffer.end());
     }
 
     template<typename Iter>
@@ -47,6 +47,7 @@ public:
 
 private:
     const std::string delimiter;
+    std::vector<char> _line_buffer;
 };
 
 }
