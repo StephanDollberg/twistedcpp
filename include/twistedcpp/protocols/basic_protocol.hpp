@@ -9,18 +9,15 @@
 
 namespace twisted {
 
-template<typename ChildProtocol>
-class basic_protocol : public std::enable_shared_from_this<ChildProtocol> {
+template<typename ChildProtocol, typename BufferType>
+class protocol_core : public std::enable_shared_from_this<ChildProtocol> {
 public:
     typedef boost::asio::ip::tcp::socket socket_type;
     typedef boost::asio::steady_timer timer_type;
     typedef boost::asio::io_service::strand strand_type;
-    typedef std::vector<char> buffer_type;
-    typedef buffer_type::iterator buffer_iterator;
-    typedef buffer_type::const_iterator const_buffer_iterator;
-
-    basic_protocol()
-        : _read_buffer(initial_buffer_size(), '\0') {}
+    typedef BufferType buffer_type;
+    typedef typename buffer_type::iterator buffer_iterator;
+    typedef typename buffer_type::const_iterator const_buffer_iterator;
 
     void set_socket(socket_type socket) {
         _socket.reset(new socket_type(std::move(socket)));
@@ -35,9 +32,8 @@ public:
 
             try {
                 for(;_socket->is_open();) {
-                    auto bytes_read = _socket->async_read_some(
-                        this_protocol().read_buffer(), yield);
-                    checked_on_message(bytes_read);
+                    auto bytes_read = _socket->async_read_some(asio_buffer(), yield);
+                    checked_on_message(buffer_begin(), std::next(buffer_begin(), bytes_read));
                 }
             } catch(boost::system::system_error& connection_error) { // network errors
                 print_connection_error(connection_error);
@@ -75,37 +71,6 @@ public:
         std::cout << "Closing connection to client" << std::endl;
     }
 
-    boost::asio::mutable_buffers_1 read_buffer() {
-        return boost::asio::buffer(_read_buffer);
-    }
-
-private:
-    void print_connection_error(const boost::system::system_error& connection_error) const {
-        std::cerr << "Client disconnected with code "
-                  << connection_error.what()
-                  << std::endl;
-    }
-
-    void print_exception_what(const std::exception& excep) {
-        std::cerr << "Killing connection, exception in client handler: "
-                  << excep.what()
-                  << std::endl;
-    }
-
-    void checked_on_message(std::size_t bytes_read) {
-        try {
-            this_protocol().on_message(
-                _read_buffer.begin(), std::next(_read_buffer.begin(), bytes_read));
-        } catch (...) {
-            this_protocol().on_error(std::current_exception());
-        }
-    }
-
-    std::size_t initial_buffer_size() const {
-        return 1024;
-    }
-
-public:
     /*
      * @brief CRTP wrapper for derived class access
      */
@@ -121,14 +86,79 @@ public:
     }
 
 private:
-    buffer_type _read_buffer;
+    void print_connection_error(const boost::system::system_error& connection_error) const {
+        std::cerr << "Client disconnected with code "
+                  << connection_error.what()
+                  << std::endl;
+    }
+
+    void print_exception_what(const std::exception& excep) {
+        std::cerr << "Killing connection, exception in client handler: "
+                  << excep.what()
+                  << std::endl;
+    }
+
+    void checked_on_message(const_buffer_iterator begin, const_buffer_iterator end) {
+        try {
+            this_protocol().on_message(begin, end);
+        } catch (...) {
+            this_protocol().on_error(std::current_exception());
+        }
+    }
+
+
+    buffer_iterator buffer_begin() {
+        return this_protocol().read_buffer().begin();
+    }
+
+    buffer_iterator buffer_begin() const {
+        return this_protocol().read_buffer().begin();
+    }
+
+    buffer_iterator buffer_end() {
+        return this_protocol().read_buffer().end();
+    }
+
+    buffer_iterator buffer_end() const {
+        return this_protocol().read_buffer().end();
+    }
+
+    boost::asio::mutable_buffers_1 asio_buffer() {
+        return boost::asio::buffer(
+            &*buffer_begin(), std::distance(buffer_begin(), buffer_end()));
+    }
+
+private:
     boost::optional<boost::asio::yield_context> _yield;
     std::unique_ptr<socket_type> _socket; // unique_ptr as boost::optional has no move support
     boost::optional<timer_type> _timer;
     boost::optional<strand_type> _strand;
 };
 
-}
+template<typename ChildProtocol>
+class basic_protocol : public protocol_core<ChildProtocol, std::vector<char> > {
+public:
+    typedef std::vector<char> buffer_type;
+
+    basic_protocol() : _read_buffer(initial_buffer_size(), '\0') {}
+
+    buffer_type& read_buffer() {
+        return _read_buffer;
+    }
+
+    const buffer_type& read_buffer() const {
+        return _read_buffer;
+    }
+
+private:
+    std::size_t initial_buffer_size() const {
+        return 1024;
+    }
+
+    std::vector<char> _read_buffer;
+};
+
+} // namespace twisted
 
 
 #endif
