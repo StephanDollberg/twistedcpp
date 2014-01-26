@@ -20,17 +20,30 @@ struct line_receiver_test : twisted::line_receiver<line_receiver_test>  {
     }
 };
 
-void message_tester(const std::vector<std::string>& send_input, const std::vector<std::string>& results) {
+struct line_receiver_test_alt_delimiter
+    : twisted::line_receiver<line_receiver_test_alt_delimiter>  {
+
+    line_receiver_test_alt_delimiter() : line_receiver("XXX") {}
+
+    template<typename Iter>
+    void line_received(Iter begin, Iter end) {
+        send_line(begin, end);
+    }
+};
+
+template<typename ProtocolType>
+void message_tester(const std::vector<std::string>& send_input,
+    const std::vector<std::string>& results) {
     twisted::reactor reac;
     auto fut = std::async([&]() {
-        twisted::run<line_receiver_test>(reac, 12345);
+        twisted::run<ProtocolType>(reac, 12345);
         reac.run();
     });
 
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
 
-    BOOST_SCOPE_EXIT((&reac)) {
+    BOOST_SCOPE_EXIT_TPL((&reac)) {
         reac.stop();
     } BOOST_SCOPE_EXIT_END
 
@@ -60,7 +73,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        message_tester(test_data, test_results);
+        message_tester<line_receiver_test>(test_data, test_results);
     }
 
     SECTION("perfect match 3 in 1") {
@@ -72,7 +85,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         std::vector<std::string> test_results;
         test_results.push_back("AAA\r\n");
 
-        message_tester(test_data, test_results);
+        message_tester<line_receiver_test>(test_data, test_results);
     }
 
     SECTION("perfect match 2 on 2") {
@@ -84,7 +97,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        message_tester(test_data, test_results);
+        message_tester<line_receiver_test>(test_data, test_results);
     }
 
     SECTION("open match 2 in 1") {
@@ -95,7 +108,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        message_tester(test_data, test_results);
+        message_tester<line_receiver_test>(test_data, test_results);
     }
 
     SECTION("open match 2 on 2") {
@@ -108,7 +121,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
 
-        message_tester(test_data, test_results);
+        message_tester<line_receiver_test>(test_data, test_results);
     }
 
     SECTION("end match 3 on 1") {
@@ -120,7 +133,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         std::vector<std::string> test_results;
         test_results.push_back("AAABBBCCC\r\n");
 
-        message_tester(test_data, test_results);
+        message_tester<line_receiver_test>(test_data, test_results);
     }
 
     SECTION("no match 2 on 0") {
@@ -131,6 +144,16 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         std::vector<std::string> test_results;
         test_results.push_back("");
 
-        message_tester(test_data, test_results);
+        message_tester<line_receiver_test>(test_data, test_results);
+    }
+
+    SECTION("alternative delimiter") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAAXXX");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AAAXXX");
+
+        message_tester<line_receiver_test_alt_delimiter>(test_data, test_results);
     }
 }

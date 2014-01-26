@@ -12,7 +12,8 @@ namespace twisted {
 template<typename ChildProtocol>
 class line_receiver : public twisted::basic_protocol<ChildProtocol> {
 public:
-    line_receiver() : delimiter("\r\n") {
+    line_receiver(std::string delimiter = std::string("\r\n"))
+        : _delimiter(std::move(delimiter)) {
 
     }
 
@@ -25,7 +26,7 @@ public:
 
         while(search_iter != _line_buffer.end()) {
             this->this_protocol().line_received(line_start, search_iter);
-            line_start = std::next(search_iter, delimiter.size());
+            line_start = std::next(search_iter, _delimiter.size());
             search_iter = find_next(line_start, _line_buffer.end());
         }
 
@@ -36,7 +37,7 @@ public:
     void send_line(Iter begin, Iter end) {
         std::array<boost::asio::const_buffer, 2> buffers{ {
             boost::asio::buffer(&*begin, std::distance(begin, end)),
-            boost::asio::buffer(&*delimiter.begin(), delimiter.size())
+            boost::asio::buffer(&*_delimiter.begin(), _delimiter.size())
         } };
 
         this->send_buffers(buffers);
@@ -46,10 +47,10 @@ private:
     template<typename Iter>
     Iter find_next(Iter begin, Iter end) const {
         return std::search(
-            begin, end, delimiter.begin(), delimiter.end());
+            begin, end, _delimiter.begin(), _delimiter.end());
     }
 
-    const std::string delimiter;
+    const std::string _delimiter;
     std::vector<char> _line_buffer;
 };
 
