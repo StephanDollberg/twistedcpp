@@ -36,7 +36,7 @@ public:
             try {
                 for(;_socket->is_open();) {
                     auto bytes_read = _socket->async_read_some(
-                        boost::asio::buffer(_read_buffer), yield);
+                        this_protocol().read_buffer(), yield);
                     checked_on_message(bytes_read);
                 }
             } catch(boost::system::system_error& connection_error) { // network errors
@@ -73,6 +73,10 @@ public:
     void lose_connection() {
         _socket->close();
         std::cout << "Closing connection to client" << std::endl;
+    }
+
+    boost::asio::mutable_buffers_1 read_buffer() {
+        return boost::asio::buffer(_read_buffer);
     }
 
 private:
