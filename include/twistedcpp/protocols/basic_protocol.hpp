@@ -20,8 +20,7 @@ public:
     typedef buffer_type::const_iterator const_buffer_iterator;
 
     basic_protocol()
-        : _read_buffer(1024),
-            _read_index(_read_buffer.begin()) {}
+        : _read_buffer(initial_buffer_size(), '\0') {}
 
     void set_socket(socket_type socket) {
         _socket.reset(new socket_type(std::move(socket)));
@@ -36,9 +35,9 @@ public:
 
             try {
                 for(;_socket->is_open();) {
-                    expand_buffer();
-                    auto bytes_read = _socket->async_read_some(read_buffer(), yield);
-                    checked_on_message(_read_index, std::next(_read_index, bytes_read));
+                    auto bytes_read = _socket->async_read_some(
+                        boost::asio::buffer(_read_buffer), yield);
+                    checked_on_message(bytes_read);
                 }
             } catch(boost::system::system_error& connection_error) { // network errors
                 print_connection_error(connection_error);
@@ -47,10 +46,6 @@ public:
                 print_exception_what(excep);
             }
         });
-    }
-
-    boost::asio::mutable_buffers_1 read_buffer() {
-        return boost::asio::buffer(&*_read_index, std::distance(_read_index, _read_buffer.end()));
     }
 
     template<typename Iter>
@@ -93,24 +88,20 @@ private:
                   << std::endl;
     }
 
-    void expand_buffer() {
-        auto range = std::distance(_read_buffer.begin(), _read_index);
-        if(range < 1024) {
-            _read_buffer.resize(_read_buffer.size() * 2);
-            _read_index = std::next(_read_buffer.begin(), range);
-        }
-    }
-
-    template<typename Iter>
-    void checked_on_message(Iter begin, Iter end) {
+    void checked_on_message(std::size_t bytes_read) {
         try {
-            this_protocol().on_message(begin, end);
+            this_protocol().on_message(
+                _read_buffer.begin(), std::next(_read_buffer.begin(), bytes_read));
         } catch (...) {
             this_protocol().on_error(std::current_exception());
         }
     }
 
-protected:
+    std::size_t initial_buffer_size() const {
+        return 1024;
+    }
+
+public:
     /*
      * @brief CRTP wrapper for derived class access
      */
@@ -125,9 +116,8 @@ protected:
         return *static_cast<ChildProtocol*>(this);
     }
 
-    buffer_type _read_buffer;
-    buffer_iterator _read_index;
 private:
+    buffer_type _read_buffer;
     boost::optional<boost::asio::yield_context> _yield;
     std::unique_ptr<socket_type> _socket; // unique_ptr as boost::optional has no move support
     boost::optional<timer_type> _timer;
