@@ -47,7 +47,7 @@ void message_tester(const std::vector<std::string>& send_input, const std::vecto
     boost::for_each(results, [&] (const std::string& input) {
         std::string buffer(input.size(), '\0');
         boost::asio::read(socket, boost::asio::buffer(&buffer[0], buffer.size()));
-        CHECK(boost::equal(buffer, input));
+        CHECK(buffer == input);
     });
 }
 
@@ -59,6 +59,18 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         std::vector<std::string> test_results;
         test_results.push_back("AAA\r\n");
         test_results.push_back("BBB\r\n");
+
+        message_tester(test_data, test_results);
+    }
+
+    SECTION("perfect match 3 in 1") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAA");
+        test_data.push_back("\r");
+        test_data.push_back("\n");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AAA\r\n");
 
         message_tester(test_data, test_results);
     }
