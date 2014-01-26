@@ -2,7 +2,7 @@ twistedcpp
 ==========
 Porting twisted to C++.
 
-Note: Everything is very very alpha, yet.
+Note: Everything is very very alpha, yet. Help and projects very appreciated.
 
 
 ``` cpp
