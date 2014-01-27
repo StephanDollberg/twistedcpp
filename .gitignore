@@ -21,3 +21,5 @@ main.cpp
 makefile
 
 test/stress.sh
+
+*.gch
