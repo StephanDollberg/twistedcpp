@@ -13,58 +13,64 @@
 
 using boost::asio::ip::tcp;
 
-struct line_receiver_test : twisted::line_receiver<line_receiver_test>  {
-    template<typename Iter>
+struct line_receiver_test : twisted::line_receiver<line_receiver_test> {
+    template <typename Iter>
     void line_received(Iter begin, Iter end) {
         send_line(begin, end);
     }
 };
 
 struct line_receiver_test_alt_delimiter
-    : twisted::line_receiver<line_receiver_test_alt_delimiter>  {
+    : twisted::line_receiver<line_receiver_test_alt_delimiter> {
 
     line_receiver_test_alt_delimiter() : line_receiver("XXX") {}
 
-    template<typename Iter>
+    template <typename Iter>
     void line_received(Iter begin, Iter end) {
         send_line(begin, end);
     }
 };
 
-template<typename ProtocolType>
+template <typename ProtocolType>
 void message_tester(const std::vector<std::string>& send_input,
-    const std::vector<std::string>& results) {
+                    const std::vector<std::string>& results) {
     twisted::reactor reac;
     auto fut = std::async([&]() {
-        twisted::run<ProtocolType>(reac, 12345);
+        reac.listen_tcp<ProtocolType>(50000);
         reac.run();
     });
 
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
 
-    BOOST_SCOPE_EXIT_TPL((&reac)) {
+    BOOST_SCOPE_EXIT_TPL((&reac)(&socket)) {
+        if (socket.is_open()) {
+            socket.close();
+        }
         reac.stop();
-    } BOOST_SCOPE_EXIT_END
+    }
+    BOOST_SCOPE_EXIT_END
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
     socket.connect(tcp::endpoint(
-        boost::asio::ip::address::from_string("127.0.0.1"), 12345));
+        boost::asio::ip::address::from_string("127.0.0.1"), 50000));
 
-    boost::for_each(send_input, [&] (const std::string& input) {
+    boost::for_each(send_input, [&](const std::string& input) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
         boost::asio::write(socket, boost::asio::buffer(input));
     });
 
-    boost::for_each(results, [&] (const std::string& input) {
+    boost::for_each(results, [&](const std::string& input) {
         std::string buffer(input.size(), '\0');
-        boost::asio::read(socket, boost::asio::buffer(&buffer[0], buffer.size()));
+        boost::asio::read(socket,
+                          boost::asio::buffer(&buffer[0], buffer.size()));
         CHECK(buffer == input);
     });
 }
 
-TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]") {
+TEST_CASE("line_receiver behavior tests",
+          "[line_receiver][protocols][behavior]") {
     SECTION("perfect match 2 in 1") {
         std::vector<std::string> test_data;
         test_data.push_back("AAA\r\nBBB\r\n");
@@ -154,6 +160,7 @@ TEST_CASE("line_receiver behavior tests", "[line_receiver][protocols][behavior]"
         std::vector<std::string> test_results;
         test_results.push_back("AAAXXX");
 
-        message_tester<line_receiver_test_alt_delimiter>(test_data, test_results);
+        message_tester<line_receiver_test_alt_delimiter>(test_data,
+                                                         test_results);
     }
 }
