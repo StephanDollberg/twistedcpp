@@ -8,6 +8,7 @@ Note: Everything is very very alpha, yet. Help and projects very appreciated.
 ``` cpp
 #include <twistedcpp/reactor.hpp>
 #include <twistedcpp/protocols/basic_protocol.hpp>
+#include <twistedcpp/factories/default_factory.hpp>
 
 struct echo_protocol : twisted::basic_protocol<echo_protocol> {
     template<typename Iter>
@@ -17,6 +18,8 @@ struct echo_protocol : twisted::basic_protocol<echo_protocol> {
 };
 
 int main() {
-    twisted::run<echo_protocol>(12345);
+    twisted::reactor reac;
+    reac.listen_tcp(50000, twisted::default_factory<echo_protocol>());
+    reac.run();
 }
 ```
