@@ -1,7 +1,11 @@
 DEFINES= -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
-	LIBS= -lboost_coroutine -lboost_context -lboost_system
+	ifeq ($(CXX),clang++)
+		LIBS= -pthread -lc++abi -lboost_coroutine -lboost_context -lboost_system
+	else
+		LIBS= -lboost_coroutine -lboost_context -lboost_system
+	endif
 endif
 ifeq ($(UNAME), Darwin)
 	LIBS= -lboost_coroutine-mt -lboost_context-mt -lboost_system-mt
@@ -29,7 +33,7 @@ OBJS = $(addprefix ./, $(notdir $(SOURCES:.cpp=.o)))
 	$(CXX) $(standard_library) $(ARGS) $(CXXFLAGS) $(ADD_INC_FLAGS) -c $< -o $@
 
 test_main: $(OBJS)
-	$(CXX) $(standard_library) $(ARGS) $(LDFLAGS) $(OBJS) $(LIBS) $(ADD_LIB_FLAGS) -o $@
+	$(CXX) $(standard_library) $(ARGS) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) $(ADD_LIB_FLAGS)
 
 run:
 	./test_main
