@@ -19,10 +19,13 @@ public:
     typedef typename buffer_type::iterator buffer_iterator;
     typedef typename buffer_type::const_iterator const_buffer_iterator;
 
+    protocol_core() = default;
+    protocol_core(protocol_core&&) = default;
+    protocol_core& operator=(protocol_core&&) = default;
+
     void set_socket(socket_type socket) {
         _socket.reset(new socket_type(std::move(socket)));
         _strand = boost::in_place(boost::ref(_socket->get_io_service()));
-        _timer = boost::in_place(boost::ref(_socket->get_io_service()));
     }
 
     void run_protocol() {
@@ -130,7 +133,6 @@ private:
     boost::optional<boost::asio::yield_context> _yield;
     std::unique_ptr<socket_type> _socket; // unique_ptr as boost::optional has
                                           // no move support
-    boost::optional<timer_type> _timer;
     boost::optional<strand_type> _strand;
 };
 
