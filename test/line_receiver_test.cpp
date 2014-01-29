@@ -2,6 +2,7 @@
 
 #include "../include/twistedcpp/protocols/line_receiver.hpp"
 #include "../include/twistedcpp/reactor.hpp"
+#include "../include/twistedcpp/factories/default_factory.hpp"
 
 #include <boost/range/algorithm.hpp>
 #include <boost/asio/read.hpp>
@@ -35,8 +36,8 @@ template <typename ProtocolType>
 void message_tester(const std::vector<std::string>& send_input,
                     const std::vector<std::string>& results) {
     twisted::reactor reac;
-    auto fut = std::async([&]() {
-        reac.listen_tcp<ProtocolType>(50000);
+    auto fut = std::async(std::launch::async, [&]() {
+        reac.listen_tcp(50000, twisted::default_factory<ProtocolType>());
         reac.run();
     });
 
@@ -44,14 +45,14 @@ void message_tester(const std::vector<std::string>& send_input,
     tcp::socket socket(io_service);
 
     BOOST_SCOPE_EXIT_TPL((&reac)(&socket)) {
+        reac.stop();
         if (socket.is_open()) {
             socket.close();
         }
-        reac.stop();
     }
     BOOST_SCOPE_EXIT_END
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
 
     socket.connect(tcp::endpoint(
         boost::asio::ip::address::from_string("127.0.0.1"), 50000));

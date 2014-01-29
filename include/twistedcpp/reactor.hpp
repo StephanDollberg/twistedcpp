@@ -20,15 +20,14 @@ public:
 
     void stop() { _io_service.stop(); }
 
-    template <typename Protocol, typename... ProtocolArgs>
-    void listen_tcp(int port, ProtocolArgs&&... protocol_args) {
-        run_impl_tcp<Protocol>(port,
-                               std::forward<ProtocolArgs>(protocol_args)...);
+    template <typename ProtocolFactory>
+    void listen_tcp(int port, ProtocolFactory factory) {
+        run_impl_tcp(port, std::move(factory));
     }
 
 private:
-    template <typename Protocol, typename... ProtocolArgs>
-    void run_impl_tcp(int port, ProtocolArgs&&... protocol_args) {
+    template <typename ProtocolFactory>
+    void run_impl_tcp(int port, ProtocolFactory factory) {
         using boost::asio::ip::tcp;
 
         boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
@@ -43,8 +42,8 @@ private:
                     throw boost::system::system_error(ec);
                 }
 
-                auto new_client = std::make_shared<Protocol>(
-                    std::forward<ProtocolArgs>(protocol_args)...);
+                auto new_client =
+                    std::make_shared<decltype(factory())>(factory());
                 // lazy init to avoid clutter in protocol constructors
                 new_client->set_socket(std::move(socket));
                 new_client->run_protocol();
