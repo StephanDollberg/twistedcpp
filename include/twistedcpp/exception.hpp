@@ -3,8 +3,6 @@
 
 #include <boost/exception/all.hpp>
 
-namespace twisted {
-
-}
+namespace twisted {}
 
 #endif
