@@ -1,6 +1,8 @@
 #ifndef TWISTEDCPP_PROTOCOL_CORE
 #define TWISTEDCPP_PROTOCOL_CORE
 
+#include "../sockets.hpp"
+
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/optional.hpp>
@@ -12,7 +14,7 @@ namespace twisted {
 template <typename ChildProtocol, typename BufferType>
 class protocol_core : public std::enable_shared_from_this<ChildProtocol> {
 public:
-    typedef boost::asio::ip::tcp::socket socket_type;
+    typedef detail::socket_base socket_type;
     typedef boost::asio::steady_timer timer_type;
     typedef boost::asio::io_service::strand strand_type;
     typedef BufferType buffer_type;
@@ -23,8 +25,8 @@ public:
     protocol_core(protocol_core&&) = default;
     protocol_core& operator=(protocol_core&&) = default;
 
-    void set_socket(socket_type socket) {
-        _socket.reset(new socket_type(std::move(socket)));
+    void set_socket(std::unique_ptr<socket_type> socket) {
+        _socket = std::move(socket);
         _strand = boost::in_place(boost::ref(_socket->get_io_service()));
     }
 
@@ -35,7 +37,9 @@ public:
             _yield = boost::in_place(yield);
 
             try {
-                for (; _socket->is_open();) {
+                _socket->do_handshake(*_yield);
+
+                for (;_socket->is_open();) {
                     auto bytes_read =
                         _socket->async_read_some(asio_buffer(), yield);
                     checked_on_message(buffer_begin(),
@@ -55,14 +59,13 @@ public:
 
     template <typename Iter>
     void send_message(Iter begin, Iter end) {
-        boost::asio::async_write(
-            *_socket, boost::asio::buffer(&*begin, std::distance(begin, end)),
+        _socket->async_write(boost::asio::buffer(&*begin, std::distance(begin, end)),
             *_yield);
     }
 
     template <typename BuffersType>
     void send_buffers(const BuffersType& buffers) {
-        boost::asio::async_write(*_socket, buffers, *_yield);
+        _socket->async_write(buffers, *_yield);
     }
 
     void on_disconnect() {}
@@ -70,7 +73,7 @@ public:
     void on_error(std::exception_ptr eptr) { std::rethrow_exception(eptr); }
 
     void lose_connection() {
-        _socket->close();
+       _socket->close();
         std::cout << "Closing connection to client" << std::endl;
     }
 
