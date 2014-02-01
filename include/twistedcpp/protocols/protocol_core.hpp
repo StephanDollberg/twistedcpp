@@ -63,8 +63,7 @@ public:
             *_yield);
     }
 
-    template <typename BuffersType>
-    void send_buffers(const BuffersType& buffers) {
+    void send_buffers(const std::array<boost::asio::const_buffer, 2>& buffers) {
         _socket->async_write(buffers, *_yield);
     }
 

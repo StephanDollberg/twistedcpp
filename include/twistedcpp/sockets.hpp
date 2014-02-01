@@ -18,6 +18,8 @@ public:
                              boost::asio::yield_context) = 0;
     virtual bool is_open() const = 0;
     virtual void close() = 0;
+    virtual void async_write(std::array<boost::asio::const_buffer, 2>,
+                             boost::asio::yield_context) = 0;
     virtual boost::asio::io_service& get_io_service() = 0;
 };
 
@@ -36,6 +38,12 @@ public:
 
     virtual void async_write(boost::asio::const_buffers_1 buffers,
                              boost::asio::yield_context yield) {
+        boost::asio::async_write(_socket, buffers, yield);
+    }
+
+    virtual void async_write(std::array<boost::asio::const_buffer, 2> buffers,
+                             boost::asio::yield_context yield) {
+
         boost::asio::async_write(_socket, buffers, yield);
     }
 
@@ -70,6 +78,12 @@ public:
 
     virtual void async_write(boost::asio::const_buffers_1 buffers,
                              boost::asio::yield_context yield) {
+        boost::asio::async_write(_socket, buffers, yield);
+    }
+
+    virtual void async_write(std::array<boost::asio::const_buffer, 2> buffers,
+                             boost::asio::yield_context yield) {
+
         boost::asio::async_write(_socket, buffers, yield);
     }
 

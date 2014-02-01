@@ -43,58 +43,63 @@ private:
     template <typename ProtocolFactory, typename Handler>
     void run_impl(int port, ProtocolFactory factory, Handler handler) {
         boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
-            handler(port, factory, yield);
+            using boost::asio::ip::tcp;
+            tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
+            handler(acceptor, factory, yield);
         });
     }
 
     template <typename ProtocolFactory>
-    void run_impl_tcp(int port, ProtocolFactory factory,
+    void run_impl_tcp(boost::asio::ip::tcp::acceptor& acceptor,
+                      ProtocolFactory factory,
                       boost::asio::yield_context yield) {
-        using boost::asio::ip::tcp;
-        tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
 
-        for (;;) {
-            boost::system::error_code ec;
-            std::unique_ptr<detail::tcp_socket> socket(
+        auto socket_factory = [=]() {
+            return std::unique_ptr<detail::tcp_socket>(
                 new detail::tcp_socket(_io_service));
-            acceptor.async_accept(socket->lowest_layer(), yield[ec]);
+        };
 
-            if (ec) {
-                throw boost::system::system_error(ec);
-            }
-
-            auto new_client = std::make_shared<decltype(factory())>(factory());
-            // lazy init to avoid clutter in protocol constructors
-            new_client->set_socket(std::move(socket));
-            new_client->run_protocol();
-        }
+        run_loop(acceptor, std::move(factory), yield, socket_factory);
     }
 
     template <typename ProtocolFactory>
-    void run_impl_ssl(int port, ProtocolFactory factory,
+    void run_impl_ssl(boost::asio::ip::tcp::acceptor& acceptor,
+                      ProtocolFactory factory,
                       boost::asio::yield_context yield) {
         using boost::asio::ip::tcp;
 
-        tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
-        boost::asio::ssl::context context(
-            boost::asio::ssl::context::sslv3_server);
-        context.set_options(boost::asio::ssl::context::default_workarounds |
-                            boost::asio::ssl::context::no_sslv2 |
-                            boost::asio::ssl::context::single_dh_use);
-        context.set_password_callback([](
-            std::size_t /* max_length */,
-            boost::asio::ssl::context::password_purpose /* purpose */) {
-            return "ikn1";
-        });
-        context.use_certificate_chain_file("server.crt");
-        context.use_private_key_file("server.key",
-                                     boost::asio::ssl::context::pem);
+        auto socket_factory = [=] {
+
+            boost::asio::ssl::context context(
+                boost::asio::ssl::context::sslv3_server);
+            context.set_options(boost::asio::ssl::context::default_workarounds |
+                                boost::asio::ssl::context::no_sslv2 |
+                                boost::asio::ssl::context::single_dh_use);
+            context.set_password_callback([](
+                std::size_t /* max_length */,
+                boost::asio::ssl::context::password_purpose /* purpose */) {
+                return "ikn1";
+            });
+            context.use_certificate_chain_file("server.crt");
+            context.use_private_key_file("server.key",
+                                         boost::asio::ssl::context::pem);
+
+            return std::unique_ptr<detail::ssl_socket>(
+                new detail::ssl_socket(_io_service, context));
+        };
+
+        run_loop(acceptor, std::move(factory), yield, socket_factory);
+    }
+
+    template <typename ProtocolFactory, typename SocketFactory>
+    void run_loop(boost::asio::ip::tcp::acceptor& acceptor,
+                  ProtocolFactory factory, boost::asio::yield_context yield,
+                  SocketFactory socket_factory) {
 
         for (;;) {
             boost::system::error_code ec;
 
-            std::unique_ptr<detail::ssl_socket> socket(
-                new detail::ssl_socket(_io_service, context));
+            auto socket = socket_factory();
 
             acceptor.async_accept(socket->lowest_layer(), yield[ec]);
 
