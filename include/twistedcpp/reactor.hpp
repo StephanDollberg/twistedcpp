@@ -14,7 +14,6 @@
 #include <iostream>
 #include <memory>
 #include <iterator>
-#include <functional>
 
 namespace twisted {
 
@@ -26,13 +25,11 @@ public:
 
     template <typename ProtocolFactory>
     void listen_tcp(int port, ProtocolFactory factory) {
-        using namespace std::placeholders;
         run_impl_tcp(port, std::move(factory));
     }
 
     template <typename ProtocolFactory>
     void listen_ssl(int port, ProtocolFactory factory, ssl_options ssl_ops) {
-        using namespace std::placeholders;
         run_impl_ssl(port, std::move(factory), std::move(ssl_ops));
     }
 
