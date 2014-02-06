@@ -90,6 +90,12 @@ public:
         return *static_cast<ChildProtocol*>(this);
     }
 
+    ~protocol_core() {
+        if (_socket != nullptr && _socket->is_open()) {
+            lose_connection();
+        }
+    }
+
 private:
     void print_connection_error(
         const boost::system::system_error& connection_error) const {
