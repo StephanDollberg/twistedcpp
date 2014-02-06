@@ -8,8 +8,9 @@ ifeq ($(UNAME), Linux)
 	endif
 endif
 ifeq ($(UNAME), Darwin)
-	LIBS= -lboost_coroutine-mt -lboost_context-mt -lboost_system-mt
+	LIBS= -lboost_coroutine-mt -lboost_context-mt -lboost_system-mt -lssl -lcrypto
 endif
+
 ARGS= -std=c++11 -g  -Wall -Werror -Wextra -pedantic-errors  $(INCLUDES) $(DEFINES)
 
 ifeq ($(CXX),clang++-3.5)
