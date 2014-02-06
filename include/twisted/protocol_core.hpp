@@ -1,7 +1,7 @@
 #ifndef TWISTEDCPP_PROTOCOL_CORE
 #define TWISTEDCPP_PROTOCOL_CORE
 
-#include "../sockets.hpp"
+#include "detail/sockets.hpp"
 
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/steady_timer.hpp>

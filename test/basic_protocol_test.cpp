@@ -1,8 +1,8 @@
 #include "catch/single_include/catch.hpp"
 
 #include "../include/twisted/reactor.hpp"
-#include "../include/twisted/protocols/basic_protocol.hpp"
-#include "../include/twisted/factories/default_factory.hpp"
+#include "../include/twisted/basic_protocol.hpp"
+#include "../include/twisted/default_factory.hpp"
 
 #include <boost/asio/read.hpp>
 #include <boost/scope_exit.hpp>

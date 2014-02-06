@@ -1,7 +1,7 @@
 #ifndef TWISTEDCPP_REACTOR_HPP
 #define TWISTEDCPP_REACTOR_HPP
 
-#include "sockets.hpp"
+#include "detail/sockets.hpp"
 #include "ssl_options.hpp"
 
 #include <boost/asio/io_service.hpp>
