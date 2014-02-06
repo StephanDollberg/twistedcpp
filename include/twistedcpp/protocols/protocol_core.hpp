@@ -39,7 +39,7 @@ public:
             try {
                 _socket->do_handshake(*_yield);
 
-                for (;_socket->is_open();) {
+                for (; _socket->is_open();) {
                     auto bytes_read =
                         _socket->async_read_some(asio_buffer(), yield);
                     checked_on_message(buffer_begin(),
@@ -59,8 +59,8 @@ public:
 
     template <typename Iter>
     void send_message(Iter begin, Iter end) {
-        _socket->async_write(boost::asio::buffer(&*begin, std::distance(begin, end)),
-            *_yield);
+        _socket->async_write(
+            boost::asio::buffer(&*begin, std::distance(begin, end)), *_yield);
     }
 
     void send_buffers(const std::array<boost::asio::const_buffer, 2>& buffers) {
@@ -72,7 +72,7 @@ public:
     void on_error(std::exception_ptr eptr) { std::rethrow_exception(eptr); }
 
     void lose_connection() {
-       _socket->close();
+        _socket->close();
         std::cout << "Closing connection to client" << std::endl;
     }
 

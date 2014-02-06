@@ -1,19 +1,15 @@
 #ifndef TWISTEDCPP_REACTOR_HPP
 #define TWISTEDCPP_REACTOR_HPP
 
-#include "exception.hpp"
 #include "sockets.hpp"
 #include "ssl_options.hpp"
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/ssl.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/system/system_error.hpp>
 
-#include <iostream>
 #include <memory>
-#include <iterator>
 
 namespace twisted {
 
@@ -56,7 +52,6 @@ private:
     void run_impl_tcp_core(boost::asio::ip::tcp::acceptor& acceptor,
                            ProtocolFactory factory,
                            boost::asio::yield_context yield) {
-
         auto socket_factory = [=]() {
             return std::unique_ptr<detail::tcp_socket>(
                 new detail::tcp_socket(_io_service));
@@ -70,8 +65,6 @@ private:
                            ProtocolFactory factory,
                            boost::asio::yield_context yield,
                            ssl_options ssl_ops) {
-        using boost::asio::ip::tcp;
-
         auto context = make_ssl_context(ssl_ops);
 
         auto socket_factory = [&] {
@@ -86,7 +79,6 @@ private:
     void run_loop(boost::asio::ip::tcp::acceptor& acceptor,
                   ProtocolFactory factory, boost::asio::yield_context yield,
                   SocketFactory socket_factory) {
-
         for (;;) {
             auto socket = socket_factory();
 
