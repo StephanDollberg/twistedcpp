@@ -20,12 +20,12 @@ private:
     std::string _password;
 };
 
-ssl_options default_ssl_options(std::string certificate, std::string key,
+inline ssl_options default_ssl_options(std::string certificate, std::string key,
                                 std::string password) {
     return ssl_options(certificate, key, password);
 }
 
-boost::asio::ssl::context make_ssl_context(ssl_options ssl_ops) {
+inline boost::asio::ssl::context make_ssl_context(ssl_options ssl_ops) {
     boost::asio::ssl::context context(
         boost::asio::ssl::context::sslv23_server);
     context.set_options(boost::asio::ssl::context::default_workarounds |
