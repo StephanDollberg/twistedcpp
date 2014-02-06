@@ -2,13 +2,13 @@ twistedcpp
 ==========
 Porting twisted to C++.
 
-Note: Everything is very very alpha, yet. Help and projects very appreciated.
+Note: Everything is very very alpha, yet. Help and projects very appreciated. Check the examples to see what is currenlty possible.
 
 
 ``` cpp
-#include <twistedcpp/reactor.hpp>
-#include <twistedcpp/protocols/basic_protocol.hpp>
-#include <twistedcpp/factories/default_factory.hpp>
+#include <twisted/reactor.hpp>
+#include <twisted/basic_protocol.hpp>
+#include <twisted/default_factory.hpp>
 
 struct echo_protocol : twisted::basic_protocol<echo_protocol> {
     template<typename Iter>
