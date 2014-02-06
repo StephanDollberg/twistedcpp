@@ -139,8 +139,7 @@ private:
 
 private:
     boost::optional<boost::asio::yield_context> _yield;
-    std::unique_ptr<socket_type> _socket; // unique_ptr as boost::optional has
-                                          // no move support
+    std::unique_ptr<socket_type> _socket;
     boost::optional<strand_type> _strand;
 };
 
