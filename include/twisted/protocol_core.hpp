@@ -39,7 +39,7 @@ public:
             try {
                 _socket->do_handshake(*_yield);
 
-                for (; _socket->is_open();) {
+                while (_socket->is_open()) {
                     auto bytes_read =
                         _socket->async_read_some(asio_buffer(), yield);
                     checked_on_message(buffer_begin(),

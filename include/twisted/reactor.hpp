@@ -79,7 +79,7 @@ private:
     void run_loop(boost::asio::ip::tcp::acceptor& acceptor,
                   ProtocolFactory factory, boost::asio::yield_context yield,
                   SocketFactory socket_factory) {
-        for (;;) {
+        while (true) {
             auto socket = socket_factory();
 
             acceptor.async_accept(socket->lowest_layer(), yield);
