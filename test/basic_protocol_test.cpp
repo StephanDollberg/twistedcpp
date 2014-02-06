@@ -20,7 +20,7 @@ struct echo_protocol : twisted::basic_protocol<echo_protocol> {
     }
 };
 
-TEST_CASE("basic tcp compile test", "[tcp][reactor]") {
+TEST_CASE("basic tcp send & recv test", "[tcp][reactor]") {
     twisted::reactor reac;
     auto fut = std::async(std::launch::async, [&]() {
         reac.listen_tcp(50000, twisted::default_factory<echo_protocol>());
