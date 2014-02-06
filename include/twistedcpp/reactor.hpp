@@ -100,15 +100,9 @@ private:
                   SocketFactory socket_factory) {
 
         for (;;) {
-            boost::system::error_code ec;
-
             auto socket = socket_factory();
 
-            acceptor.async_accept(socket->lowest_layer(), yield[ec]);
-
-            if (ec) {
-                throw boost::system::system_error(ec);
-            }
+            acceptor.async_accept(socket->lowest_layer(), yield);
 
             auto new_client = std::make_shared<decltype(factory())>(factory());
             // lazy init to avoid clutter in protocol constructors
