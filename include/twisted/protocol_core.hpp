@@ -73,7 +73,6 @@ public:
 
     void lose_connection() {
         _socket->close();
-        std::cout << "Closing connection to client" << std::endl;
     }
 
     /*
@@ -91,9 +90,7 @@ public:
     }
 
     ~protocol_core() {
-        if (_socket != nullptr && _socket->is_open()) {
-            lose_connection();
-        }
+        std::cout << "Closing connection to client" << std::endl;
     }
 
 private:
