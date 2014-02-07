@@ -1,14 +1,17 @@
 DEFINES= -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
+
+SSL_LIBS =  -lssl -lcrypto
+
 UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 	ifeq ($(CXX),clang++)
 		LIBS= -pthread -lc++abi -lboost_coroutine -lboost_context -lboost_system
 	else
-		LIBS= -lboost_coroutine -lboost_context -lboost_system
+		LIBS= -lboost_coroutine -lboost_context -lboost_system $(SSL_LIBS)
 	endif
 endif
 ifeq ($(UNAME), Darwin)
-	LIBS= -lboost_coroutine-mt -lboost_context-mt -lboost_system-mt -lssl -lcrypto
+	LIBS= -lboost_coroutine-mt -lboost_context-mt -lboost_system-mt $(SSL_LIBS)
 endif
 
 ARGS= -std=c++11 -g  -Wall -Werror -Wextra -pedantic-errors  $(INCLUDES) $(DEFINES)
