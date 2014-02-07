@@ -21,6 +21,7 @@ public:
     virtual void async_write(std::array<boost::asio::const_buffer, 2>,
                              boost::asio::yield_context) = 0;
     virtual boost::asio::io_service& get_io_service() = 0;
+    virtual ~socket_base() {}
 };
 
 class tcp_socket : public socket_base {
@@ -56,6 +57,8 @@ public:
     }
 
     boost::asio::ip::tcp::socket& lowest_layer() { return _socket; }
+
+    virtual ~tcp_socket() {}
 
 private:
     boost::asio::ip::tcp::socket _socket;
@@ -99,6 +102,8 @@ public:
     lowest_layer() {
         return _socket.lowest_layer();
     }
+
+    virtual ~ssl_socket() {}
 
 private:
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
