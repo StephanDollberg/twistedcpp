@@ -89,10 +89,6 @@ public:
         return *static_cast<ChildProtocol*>(this);
     }
 
-    ~protocol_core() {
-        std::cout << "Closing connection to client" << std::endl;
-    }
-
 private:
     void print_connection_error(
         const boost::system::system_error& connection_error) const {
