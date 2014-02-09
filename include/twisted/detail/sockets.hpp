@@ -14,11 +14,15 @@ public:
     virtual void do_handshake(boost::asio::yield_context) = 0;
     virtual std::size_t async_read_some(boost::asio::mutable_buffers_1,
                                         boost::asio::yield_context) = 0;
-    virtual void async_write(boost::asio::const_buffers_1,
-                             boost::asio::yield_context) = 0;
     virtual bool is_open() const = 0;
     virtual void close() = 0;
+    virtual void async_write(boost::asio::const_buffers_1,
+                             boost::asio::yield_context) = 0;
     virtual void async_write(std::array<boost::asio::const_buffer, 2>,
+                             boost::asio::yield_context) = 0;
+    virtual void async_write(boost::asio::mutable_buffers_1,
+                             boost::asio::yield_context) = 0;
+    virtual void async_write(std::array<boost::asio::mutable_buffer, 2>,
                              boost::asio::yield_context) = 0;
     virtual boost::asio::io_service& get_io_service() = 0;
     virtual ~socket_base() {}
@@ -45,6 +49,15 @@ public:
     virtual void async_write(std::array<boost::asio::const_buffer, 2> buffers,
                              boost::asio::yield_context yield) {
 
+        boost::asio::async_write(_socket, buffers, yield);
+    }
+
+    virtual void async_write(boost::asio::mutable_buffers_1 buffers,
+                             boost::asio::yield_context yield) {
+        boost::asio::async_write(_socket, buffers, yield);
+    }
+    virtual void async_write(std::array<boost::asio::mutable_buffer, 2> buffers,
+                             boost::asio::yield_context yield) {
         boost::asio::async_write(_socket, buffers, yield);
     }
 
@@ -89,6 +102,17 @@ public:
 
         boost::asio::async_write(_socket, buffers, yield);
     }
+
+    virtual void async_write(boost::asio::mutable_buffers_1 buffers,
+                             boost::asio::yield_context yield) {
+        boost::asio::async_write(_socket, buffers, yield);
+    }
+
+    virtual void async_write(std::array<boost::asio::mutable_buffer, 2> buffers,
+                             boost::asio::yield_context yield) {
+        boost::asio::async_write(_socket, buffers, yield);
+    }
+
 
     virtual bool is_open() const { return _socket.lowest_layer().is_open(); }
 
