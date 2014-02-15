@@ -3,9 +3,7 @@
 
 #include "basic_protocol.hpp"
 
-#include <boost/tokenizer.hpp>
-
-#include <deque>
+#include <vector>
 
 namespace twisted {
 

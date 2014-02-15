@@ -113,7 +113,6 @@ public:
         boost::asio::async_write(_socket, buffers, yield);
     }
 
-
     virtual bool is_open() const { return _socket.lowest_layer().is_open(); }
 
     virtual void close() { _socket.lowest_layer().close(); }

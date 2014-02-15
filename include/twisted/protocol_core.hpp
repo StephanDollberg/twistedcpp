@@ -71,9 +71,7 @@ public:
 
     void on_error(std::exception_ptr eptr) { std::rethrow_exception(eptr); }
 
-    void lose_connection() {
-        _socket->close();
-    }
+    void lose_connection() { _socket->close(); }
 
     /*
      * @brief CRTP wrapper for derived class access
