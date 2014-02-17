@@ -65,7 +65,7 @@ private:
                            ProtocolFactory factory,
                            boost::asio::yield_context yield,
                            ssl_options ssl_ops) {
-        auto context = make_ssl_context(ssl_ops);
+        auto context = ssl_ops.make_context();
 
         auto socket_factory = [&] {
             return std::unique_ptr<detail::ssl_socket>(
