@@ -1,9 +1,34 @@
 #ifndef TWISTEDCPP_SSL_OPTIONS_HPP
 #define TWISTEDCPP_SSL_OPTIONS_HPP
 
-#include <boost/variant.hpp>
-
 namespace twisted {
+
+namespace detail {
+class variant {
+public:
+    variant() : _buffer(), _is_file(false) {}
+
+    void set_buffer(std::string buffer_input) {
+        _buffer = std::move(buffer_input);
+        _is_file = false;
+    }
+
+    void set_file(std::string filename) {
+        _buffer = std::move(filename);
+        _is_file = true;
+    }
+
+    const std::string& filename() const { return _buffer; }
+
+    const std::string& buffer() const { return _buffer; }
+
+    bool is_file() const { return _is_file; }
+
+private:
+    std::string _buffer;
+    bool _is_file;
+};
+}
 
 /**
  * Basic wrapper around boost::asio::ssl::context which stores filenames/buffers
@@ -70,61 +95,35 @@ public:
     */
     void use_certificate_file(std::string) {}
 
-    struct use_certificate_chain_visitor : boost::static_visitor<> {
-        use_certificate_chain_visitor(context_type& context)
-            : _context(context) {}
-        void operator()(const std::string& filename) const {
-            _context.use_certificate_chain_file(filename);
-        }
-
-        void operator()(const std::vector<char>& buffer) const {
-            _context.use_certificate_chain(boost::asio::buffer(buffer));
-        }
-
-        context_type& _context;
-    };
-
     /**
     Use a certificate chain from a memory buffer.
     */
     template <typename Iter>
     void use_certificate_chain(Iter begin_buffer, Iter end_buffer) {
-        _certificate_chain = std::vector<char>(begin_buffer, end_buffer);
+        _certificate_chain.set_buffer(std::string(begin_buffer, end_buffer));
     }
 
     /**
     Use a certificate chain from a file.
     */
     void use_certificate_chain_file(std::string filename) {
-        _certificate_chain = filename;
+        _certificate_chain.set_file(std::move(filename));
     }
 
-    struct use_private_key_visitor : boost::static_visitor<> {
-        use_private_key_visitor(context_type& context) : _context(context) {}
-        void operator()(const std::string& filename) const {
-            _context.use_private_key_file(filename,
-                                          boost::asio::ssl::context::pem);
-        }
-
-        void operator()(const std::vector<char>& buffer) const {
-            _context.use_private_key(boost::asio::buffer(buffer),
-                                     boost::asio::ssl::context::pem);
-        }
-
-        context_type& _context;
-    };
     /**
     Use a private key from a memory buffer.
     */
     template <typename Iter>
     void use_private_key(Iter buffer_begin, Iter buffer_end) {
-        _private_key = std::vector<char>(buffer_begin, buffer_end);
+        _private_key.set_buffer(std::string(buffer_begin, buffer_end));
     }
 
     /**
     Use a private key from a file.
     */
-    void use_private_key_file(std::string filename) { _private_key = filename; }
+    void use_private_key_file(std::string filename) {
+        _private_key.set_file(std::move(filename));
+    }
 
     /**
     Use an RSA private key from a memory buffer.
@@ -140,7 +139,7 @@ public:
     Use the specified memory buffer to obtain the temporary Diffie-Hellman
     parameters.
     */
-    void use_tmp_dh(std::string ) {}
+    void use_tmp_dh(std::string) {}
 
     /**
     Use the specified file to obtain the temporary Diffie-Hellman parameters.
@@ -158,16 +157,35 @@ public:
             boost::asio::ssl::context::password_purpose /* purpose */) {
             return _password;
         });
-        boost::apply_visitor(use_certificate_chain_visitor(context),
-                             _certificate_chain);
-        boost::apply_visitor(use_private_key_visitor(context), _private_key);
+
+        set_private_key(context);
+        set_certificate_chain(context);
 
         return context;
     }
 
 private:
-    boost::variant<std::string, std::vector<char>> _certificate_chain;
-    boost::variant<std::string, std::vector<char>> _private_key;
+    void set_private_key(context_type& context) const {
+        if (_private_key.is_file()) {
+            context.use_private_key_file(_private_key.filename(),
+                                         boost::asio::ssl::context::pem);
+        } else {
+            context.use_private_key(boost::asio::buffer(_private_key.buffer()),
+                                    boost::asio::ssl::context::pem);
+        }
+    }
+
+    void set_certificate_chain(context_type& context) const {
+        if (_certificate_chain.is_file()) {
+            context.use_certificate_chain_file(_certificate_chain.filename());
+        } else {
+            context.use_certificate_chain(
+                boost::asio::buffer(_certificate_chain.buffer()));
+        }
+    }
+
+    detail::variant _certificate_chain;
+    detail::variant _private_key;
     std::string _password;
 };
 
