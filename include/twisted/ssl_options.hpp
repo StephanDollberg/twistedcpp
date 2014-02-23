@@ -1,6 +1,24 @@
 #ifndef TWISTEDCPP_SSL_OPTIONS_HPP
 #define TWISTEDCPP_SSL_OPTIONS_HPP
 
+#define TWISTEDCPP_MACRO_CONTEXT_ON_VAR(context, variant, BFOO, FFOO, ...)     \
+    do {                                                                       \
+        if (variant.is_file()) {                                               \
+            context.FFOO(variant.filename(), __VA_ARGS__);                     \
+        } else {                                                               \
+            context.BFOO(boost::asio::buffer(variant.buffer()), __VA_ARGS__);  \
+        }                                                                      \
+    } while (0)
+
+#define TWISTEDCPP_MACRO_CONTEXT_ON(context, variant, BFOO, FFOO)              \
+    do {                                                                       \
+        if (variant.is_file()) {                                               \
+            context.FFOO(variant.filename());                                  \
+        } else {                                                               \
+            context.BFOO(boost::asio::buffer(variant.buffer()));               \
+        }                                                                      \
+    } while (0)
+
 namespace twisted {
 
 namespace detail {
@@ -166,22 +184,15 @@ public:
 
 private:
     void set_private_key(context_type& context) const {
-        if (_private_key.is_file()) {
-            context.use_private_key_file(_private_key.filename(),
-                                         boost::asio::ssl::context::pem);
-        } else {
-            context.use_private_key(boost::asio::buffer(_private_key.buffer()),
-                                    boost::asio::ssl::context::pem);
-        }
+        TWISTEDCPP_MACRO_CONTEXT_ON_VAR(context, _private_key, use_private_key,
+                                        use_private_key_file,
+                                        boost::asio::ssl::context::pem);
     }
 
     void set_certificate_chain(context_type& context) const {
-        if (_certificate_chain.is_file()) {
-            context.use_certificate_chain_file(_certificate_chain.filename());
-        } else {
-            context.use_certificate_chain(
-                boost::asio::buffer(_certificate_chain.buffer()));
-        }
+        TWISTEDCPP_MACRO_CONTEXT_ON(context, _certificate_chain,
+                                    use_certificate_chain,
+                                    use_certificate_chain_file);
     }
 
     detail::variant _certificate_chain;
