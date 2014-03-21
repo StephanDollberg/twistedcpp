@@ -22,6 +22,11 @@
 namespace twisted {
 
 namespace detail {
+
+/**
+ * Buffer for ssl options can be stored in a simple std::string and such a
+ * single bool is enough to indicate whether the variant is a file or buffer
+ */
 class variant {
 public:
     variant() : _buffer(), _is_file(false) {}
