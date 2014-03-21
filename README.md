@@ -2,7 +2,7 @@ twistedcpp
 ==========
 Porting twisted to C++.
 
-Note: Basic features are implemented, rest is kinda alpha. Help and projects very appreciated. 
+Note: Basic features are implemented, more work, help and projects very appreciated. 
 
 
 ``` cpp
@@ -12,9 +12,7 @@ Note: Basic features are implemented, rest is kinda alpha. Help and projects ver
 
 struct echo_protocol : twisted::basic_protocol<echo_protocol> {
     template<typename Iter>
-    void on_message(Iter begin, Iter end) {
-        send_message(begin, end);
-    }
+    void on_message(Iter begin, Iter end) { send_message(begin, end); }
 };
 
 int main() {
