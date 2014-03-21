@@ -14,8 +14,7 @@
 using boost::asio::ip::tcp;
 
 struct echo_protocol : twisted::basic_protocol<echo_protocol> {
-    template <typename Iter>
-    void on_message(Iter begin, Iter end) {
+    void on_message(const_buffer_iterator begin, const_buffer_iterator end) {
         send_message(begin, end);
     }
 };

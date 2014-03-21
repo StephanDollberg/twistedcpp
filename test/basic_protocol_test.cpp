@@ -16,8 +16,7 @@
 using boost::asio::ip::tcp;
 
 struct echo_protocol : twisted::basic_protocol<echo_protocol> {
-    template <typename Iter>
-    void on_message(Iter begin, Iter end) {
+    void on_message(const_buffer_iterator begin, const_buffer_iterator end) {
         send_message(begin, end);
     }
 };
@@ -27,8 +26,7 @@ TEST_CASE("basic tcp send & recv test", "[tcp][reactor]") {
 }
 
 struct error_test_protocol : twisted::basic_protocol<error_test_protocol> {
-    template <typename Iter>
-    void on_message(Iter begin, Iter end) {
+    void on_message(const_buffer_iterator begin, const_buffer_iterator end) {
         test_string.assign(begin, end);
         throw std::exception();
     }
@@ -50,8 +48,7 @@ struct disconnect_test_protocol
     disconnect_test_protocol(bool& disconnected)
         : _disconnected(disconnected) {}
 
-    template <typename Iter>
-    void on_message(Iter /* begin */, Iter /* end */) {}
+    void on_message(const_buffer_iterator /* begin */, const_buffer_iterator /* end */) {}
 
     void on_disconnect() { _disconnected = true; }
 

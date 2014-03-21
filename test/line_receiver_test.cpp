@@ -15,8 +15,7 @@
 using boost::asio::ip::tcp;
 
 struct line_receiver_test : twisted::line_receiver<line_receiver_test> {
-    template <typename Iter>
-    void line_received(Iter begin, Iter end) {
+    void line_received(const_buffer_iterator begin, const_buffer_iterator end) {
         send_line(begin, end);
     }
 };
@@ -26,8 +25,7 @@ struct line_receiver_test_alt_delimiter
 
     line_receiver_test_alt_delimiter() : line_receiver("XXX") {}
 
-    template <typename Iter>
-    void line_received(Iter begin, Iter end) {
+    void line_received(const_buffer_iterator begin, const_buffer_iterator end) {
         send_line(begin, end);
     }
 };
