@@ -1,6 +1,6 @@
 twistedcpp
 ==========
-Porting twisted to C++.
+Porting twisted to C++ using `boost::asio` coroutines.
 
 Note: Basic features are implemented, more work, help and projects very appreciated. 
 
