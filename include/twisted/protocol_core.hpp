@@ -89,14 +89,23 @@ public:
 
 private:
     void print_connection_error(
+
+#ifdef NDEBUG
+        const boost::system::system_error& /*connection_error*/) const {
+#else
         const boost::system::system_error& connection_error) const {
         std::cerr << "Client disconnected with code " << connection_error.what()
                   << std::endl;
+#endif
     }
 
+#ifdef NDEBUG
+    void print_exception_what(const std::exception& /*excep*/) {
+#else
     void print_exception_what(const std::exception& excep) {
         std::cerr << "Killing connection, exception in client handler: "
                   << excep.what() << std::endl;
+#endif
     }
 
     void checked_on_message(const_buffer_iterator begin,
