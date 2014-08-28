@@ -34,37 +34,26 @@ public:
 
     template <typename ProtocolFactory>
     void listen_tcp(int port, ProtocolFactory factory) {
-        run_impl_tcp(port, std::move(factory));
+        boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
+            using boost::asio::ip::tcp;
+            tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
+            tcp_core(acceptor, factory, yield);
+        });
     }
 
     template <typename ProtocolFactory>
     void listen_ssl(int port, ProtocolFactory factory, ssl_options ssl_ops) {
-        run_impl_ssl(port, std::move(factory), std::move(ssl_ops));
+        boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
+            using boost::asio::ip::tcp;
+            tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
+            ssl_impl(acceptor, factory, yield, ssl_ops);
+        });
     }
 
 private:
     template <typename ProtocolFactory>
-    void run_impl_tcp(int port, ProtocolFactory factory) {
-        boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
-            using boost::asio::ip::tcp;
-            tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
-            run_impl_tcp_core(acceptor, factory, yield);
-        });
-    }
-
-    template <typename ProtocolFactory>
-    void run_impl_ssl(int port, ProtocolFactory factory, ssl_options ssl_ops) {
-        boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
-            using boost::asio::ip::tcp;
-            tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
-            run_impl_ssl_core(acceptor, factory, yield, ssl_ops);
-        });
-    }
-
-    template <typename ProtocolFactory>
-    void run_impl_tcp_core(boost::asio::ip::tcp::acceptor& acceptor,
-                           ProtocolFactory factory,
-                           boost::asio::yield_context yield) {
+    void tcp_core(boost::asio::ip::tcp::acceptor& acceptor,
+                  ProtocolFactory factory, boost::asio::yield_context yield) {
         auto socket_factory = [=]() {
             return std::unique_ptr<detail::tcp_socket>(
                 new detail::tcp_socket(_io_service));
@@ -74,10 +63,9 @@ private:
     }
 
     template <typename ProtocolFactory>
-    void run_impl_ssl_core(boost::asio::ip::tcp::acceptor& acceptor,
-                           ProtocolFactory factory,
-                           boost::asio::yield_context yield,
-                           ssl_options ssl_ops) {
+    void ssl_impl(boost::asio::ip::tcp::acceptor& acceptor,
+                  ProtocolFactory factory, boost::asio::yield_context yield,
+                  ssl_options ssl_ops) {
         auto context = ssl_ops.make_context();
 
         auto socket_factory = [&] {
