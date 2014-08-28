@@ -42,11 +42,13 @@ public:
     }
 
     template <typename ProtocolFactory>
-    void listen_ssl(int port, ProtocolFactory factory, ssl_options ssl_ops) {
+    void listen_ssl(int port, ProtocolFactory factory, ssl_options&& ssl_opts) {
+        std::shared_ptr<ssl_options> ssl_opts_ptr // move capture
+            = std::make_shared<ssl_options>(std::move(ssl_opts));
         boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
             using boost::asio::ip::tcp;
             tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));
-            ssl_impl(acceptor, factory, yield, ssl_ops);
+            ssl_impl(acceptor, factory, yield, ssl_opts_ptr);
         });
     }
 
@@ -65,12 +67,10 @@ private:
     template <typename ProtocolFactory>
     void ssl_impl(boost::asio::ip::tcp::acceptor& acceptor,
                   ProtocolFactory factory, boost::asio::yield_context yield,
-                  ssl_options ssl_ops) {
-        auto context = ssl_ops.make_context();
-
+                  std::shared_ptr<ssl_options> ssl_context) {
         auto socket_factory = [&] {
             return std::unique_ptr<detail::ssl_socket>(
-                new detail::ssl_socket(_io_service, context));
+                new detail::ssl_socket(_io_service, *ssl_context));
         };
 
         run_loop(acceptor, std::move(factory), yield, socket_factory);
