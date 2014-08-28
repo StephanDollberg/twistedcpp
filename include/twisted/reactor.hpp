@@ -10,14 +10,27 @@
 #include <boost/system/system_error.hpp>
 
 #include <memory>
+#include <thread>
 
 namespace twisted {
 
 class reactor {
 public:
-    void run() { _io_service.run(); }
+    void run(int thread_count = 1) {
+        for (int i = 0; i != thread_count - 1; ++i) {
+            worker_threads.emplace_back([&] { _io_service.run(); });
+        }
 
-    void stop() { _io_service.stop(); }
+        _io_service.run();
+    }
+
+    void stop() {
+        _io_service.stop();
+
+        for (auto&& t : worker_threads) {
+            t.join();
+        }
+    }
 
     template <typename ProtocolFactory>
     void listen_tcp(int port, ProtocolFactory factory) {
@@ -92,6 +105,7 @@ private:
     }
 
     boost::asio::io_service _io_service;
+    std::vector<std::thread> worker_threads;
 };
 
 } // namespace twisted
