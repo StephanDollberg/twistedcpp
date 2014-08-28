@@ -23,3 +23,5 @@ makefile
 test/stress.sh
 
 *.gch
+
+examples/test_main
