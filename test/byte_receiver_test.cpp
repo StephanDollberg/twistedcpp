@@ -22,6 +22,25 @@ struct byte_receiver_test : twisted::byte_receiver<byte_receiver_test> {
     }
 };
 
+struct byte_receiver_update_test : twisted::byte_receiver<byte_receiver_update_test> {
+    byte_receiver_update_test() : byte_receiver(2) {}
+
+    void bytes_received(const_buffer_iterator begin, const_buffer_iterator end) {
+        send_message(begin, end);
+
+        set_package_size(20);
+    }
+};
+
+struct byte_receiver_decrease_update_test : twisted::byte_receiver<byte_receiver_decrease_update_test> {
+    byte_receiver_decrease_update_test() : byte_receiver(4) {}
+
+    void bytes_received(const_buffer_iterator begin, const_buffer_iterator end) {
+        send_message(begin, end);
+
+        set_package_size(2);
+    }
+};
 
 template <typename ProtocolType>
 void message_tester(const std::vector<std::string>& send_input,
@@ -180,5 +199,43 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("EEE");
 
         message_tester<byte_receiver_test>(test_data, test_results);
+    }
+
+    SECTION("change package size - simple upgrade") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AA");
+        test_data.push_back(std::string(20, 'X'));
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AA");
+        test_results.push_back(std::string(20, 'X'));
+
+        message_tester<byte_receiver_update_test>(test_data, test_results);
+    }
+
+    SECTION("change package size - simple upgrade one shot") {
+        std::vector<std::string> test_data;
+        std::string test_string = std::string(20, 'X');
+        test_string.insert(0, 2, 'A');
+        test_data.push_back(test_string);
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AA");
+        test_results.push_back(std::string(20, 'X'));
+
+        message_tester<byte_receiver_update_test>(test_data, test_results);
+    }
+
+    SECTION("decrease package size - simple upgrade") {
+        std::vector<std::string> test_data;
+        test_data.push_back("AAAABBCCDD");
+
+        std::vector<std::string> test_results;
+        test_results.push_back("AAAA");
+        test_results.push_back("BB");
+        test_results.push_back("CC");
+        test_results.push_back("DD");
+
+        message_tester<byte_receiver_decrease_update_test>(test_data, test_results);
     }
 }
