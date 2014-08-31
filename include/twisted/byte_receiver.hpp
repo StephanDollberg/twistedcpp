@@ -29,7 +29,7 @@ public:
 
         while(_current_count >= _next_bytes_size) {
             /* protocol user can change package size in between calls
-                we need to cache the old package-size for the _current_* updates */
+                -> we need to cache the old package-size for the _current_* updates */
             size_type old_package_size = _next_bytes_size;
 
             this->this_protocol().bytes_received(
@@ -40,7 +40,14 @@ public:
             _current_begin += old_package_size;
         }
 
-        if(_current_begin + _current_count == _read_buffer.size()) {
+        // un-fragmented data
+        if(_current_count == 0) {
+            _current_begin = 0;
+        }
+        /* fragmented data and buffer is full
+            -> we need to copy the existing data to the beginning
+            to make space for a full packet size */
+        else if(_current_begin + _current_count == _read_buffer.size()) {
             std::copy(
                 std::next(_read_buffer.begin(), _current_begin),
                 _read_buffer.end(),
