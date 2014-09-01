@@ -7,21 +7,24 @@
 #include <vector>
 
 #include <boost/range/iterator_range.hpp>
+#include <boost/container/vector.hpp>
+#include <boost/container/container_fwd.hpp>
 
 namespace twisted {
 
 template <typename ChildProtocol>
 class byte_receiver : public twisted::protocol_core<ChildProtocol,
-    boost::iterator_range<std::vector<char>::iterator>> {
+    boost::iterator_range<boost::container::vector<char>::iterator>> {
 public:
-    typedef std::vector<char> internal_buffer_type;
+    typedef boost::container::vector<char> internal_buffer_type;
     typedef internal_buffer_type::size_type size_type;
     typedef boost::iterator_range<internal_buffer_type::iterator> buffer_type;
     typedef boost::iterator_range<internal_buffer_type::const_iterator> const_buffer_type;
 
     byte_receiver(int start_bytes_size)
         : _next_bytes_size(start_bytes_size), _current_begin(0),
-            _current_count(0), _read_buffer(calculate_buffer_size(start_bytes_size)) {}
+            _current_count(0),
+            _read_buffer(calculate_buffer_size(start_bytes_size)) {}
 
     template <typename Iter>
     void on_message(Iter begin, Iter end) {
@@ -75,6 +78,8 @@ public:
         }
 
         _next_bytes_size = package_size;
+
+        // evaluate different kinds of copying existing data + buffer size here
     }
 
 private:
