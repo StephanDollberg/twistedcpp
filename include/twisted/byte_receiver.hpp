@@ -64,6 +64,7 @@ private:
     }
 
     size_type _next_bytes_size; // size per block
+    // TODO evaluate whether copying each time is faster than tracking _current_begin
     size_type _current_begin; // start-position of not processed data in buffer
     size_type _current_count; // current amount of not processed data
     internal_buffer_type _read_buffer;

@@ -83,6 +83,7 @@ private:
 
     void expand_buffer() { _line_buffer.resize(_line_buffer.size() * 2); }
 
+    // TODO evaluate whether copying each time is faster than tracking _current_begin
     size_type _current_begin; // start-position of not processed data in buffer
     size_type _current_count; // current amount of not processed data
     const std::string _delimiter;
