@@ -22,26 +22,34 @@ public:
     const_buffer_type;
 
     line_receiver(std::string delimiter = std::string("\r\n"))
-        : _current_count(0), _delimiter(std::move(delimiter)),
-          _line_buffer(32) {}
+        : _current_begin(0), _current_count(0),
+          _delimiter(std::move(delimiter)), _line_buffer(32) {}
 
     template <typename Iter>
-    void on_message(Iter /*begin*/, Iter end) {
-        auto line_start = _line_buffer.begin();
-        auto search_iter = find_next(_line_buffer.begin(), _line_buffer.end());
+    void on_message(Iter begin, Iter end) {
+        _current_count += std::distance(begin, end);
 
-        while (search_iter != _line_buffer.end()) {
+        auto line_start = std::next(_line_buffer.begin(), _current_begin);
+        auto search_iter = find_next(line_start, end);
+
+        while (search_iter != end) {
             this->this_protocol().line_received(line_start, search_iter);
-            line_start = std::next(search_iter, _delimiter.size());
-            search_iter = find_next(line_start, _line_buffer.end());
-        }
+            _current_count -=
+                std::distance(line_start, search_iter) + _delimiter.size();
+            _current_begin +=
+                std::distance(line_start, search_iter) + _delimiter.size();
 
-        _current_count = std::distance(line_start, end);
+            line_start = std::next(search_iter, _delimiter.size());
+            search_iter = find_next(line_start, end);
+        }
 
         if (_current_count == _line_buffer.size()) {
             expand_buffer();
-        } else if (line_start != _line_buffer.begin()) {
-            std::copy(line_start, end, _line_buffer.begin());
+        } else if (_current_begin + _current_count == _line_buffer.size()) {
+            std::copy(std::next(_line_buffer.begin(), _current_begin),
+                      _line_buffer.end(), _line_buffer.begin());
+
+            _current_begin = 0;
         }
     }
 
@@ -57,13 +65,13 @@ public:
 
     buffer_type read_buffer() {
         return boost::make_iterator_range(
-            std::next(_line_buffer.begin(), _current_count),
+            std::next(_line_buffer.begin(), _current_begin + _current_count),
             _line_buffer.end());
     }
 
     const const_buffer_type& read_buffer() const {
         return boost::make_iterator_range(
-            std::next(_line_buffer.begin(), _current_count),
+            std::next(_line_buffer.begin(), _current_begin + _current_count),
             _line_buffer.end());
     }
 
@@ -75,6 +83,7 @@ private:
 
     void expand_buffer() { _line_buffer.resize(_line_buffer.size() * 2); }
 
+    size_type _current_begin; // start-position of not processed data in buffer
     size_type _current_count; // current amount of not processed data
     const std::string _delimiter;
     internal_buffer_type _line_buffer;
