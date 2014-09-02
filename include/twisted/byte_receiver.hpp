@@ -1,5 +1,5 @@
-#ifndef TWISTEDCPP_LINE_RECEIVER
-#define TWISTEDCPP_LINE_RECEIVER
+#ifndef TWISTEDCPP_BYTE_RECEIVER
+#define TWISTEDCPP_BYTE_RECEIVER
 
 #include "basic_protocol.hpp"
 #include "protocol_core.hpp"
