@@ -162,4 +162,17 @@ TEST_CASE("line_receiver behavior tests",
         message_tester<line_receiver_test_alt_delimiter>(test_data,
                                                          test_results);
     }
+
+    SECTION("buffer expansion") {
+        std::vector<std::string> test_data;
+        // needs to be bigger than the internal buffer
+        std::string test_string(48, 'X');
+        test_string.append("\r\n");
+        test_data.push_back(test_string);
+
+        std::vector<std::string> test_results;
+        test_results.push_back(test_string);
+
+        message_tester<line_receiver_test>(test_data, test_results);
+    }
 }
