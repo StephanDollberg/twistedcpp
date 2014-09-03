@@ -2,6 +2,7 @@
 #define TWISTEDCPP_LINE_RECEIVER
 
 #include "protocol_core.hpp"
+#include "detail/line_receiver_parser.hpp"
 
 #include <vector>
 
@@ -27,30 +28,8 @@ public:
 
     template <typename Iter>
     void on_message(Iter begin, Iter end) {
-        _current_count += std::distance(begin, end);
-
-        auto line_start = std::next(_line_buffer.begin(), _current_begin);
-        auto search_iter = find_next(line_start, end);
-
-        while (search_iter != end) {
-            this->this_protocol().line_received(line_start, search_iter);
-            _current_count -=
-                std::distance(line_start, search_iter) + _delimiter.size();
-            _current_begin +=
-                std::distance(line_start, search_iter) + _delimiter.size();
-
-            line_start = std::next(search_iter, _delimiter.size());
-            search_iter = find_next(line_start, end);
-        }
-
-        if (_current_count == _line_buffer.size()) {
-            expand_buffer();
-        } else if (_current_begin + _current_count == _line_buffer.size()) {
-            std::copy(std::next(_line_buffer.begin(), _current_begin),
-                      _line_buffer.end(), _line_buffer.begin());
-
-            _current_begin = 0;
-        }
+        line::parse(begin, end, _current_begin, _current_count,
+                    _delimiter, _line_buffer, this->this_protocol());
     }
 
     template <typename Iter>
@@ -76,13 +55,6 @@ public:
     }
 
 private:
-    template <typename Iter>
-    Iter find_next(Iter begin, Iter end) const {
-        return std::search(begin, end, _delimiter.begin(), _delimiter.end());
-    }
-
-    void expand_buffer() { _line_buffer.resize(_line_buffer.size() * 2); }
-
     // TODO evaluate whether copying each time is faster than tracking _current_begin
     size_type _current_begin; // start-position of not processed data in buffer
     size_type _current_count; // current amount of not processed data
