@@ -4,8 +4,6 @@
 #include "protocol_core.hpp"
 #include "detail/line_receiver_parser.hpp"
 
-#include <vector>
-
 #include <boost/container/vector.hpp>
 
 namespace twisted {

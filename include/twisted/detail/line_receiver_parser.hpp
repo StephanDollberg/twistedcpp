@@ -3,7 +3,6 @@
 
 #include "../byte_receiver.hpp"
 
-#include <vector>
 #include <cstddef>
 
 #include <boost/range/iterator_range.hpp>
