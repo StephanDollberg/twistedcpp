@@ -9,6 +9,10 @@
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/write.hpp>
 
+#ifndef NDEBUG
+#include <iostream>
+#endif
+
 namespace twisted {
 
 template <typename ChildProtocol, typename BufferType>

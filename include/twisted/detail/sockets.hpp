@@ -5,7 +5,6 @@
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/spawn.hpp>
 
-#include <iostream>
 namespace twisted {
 
 namespace detail {
