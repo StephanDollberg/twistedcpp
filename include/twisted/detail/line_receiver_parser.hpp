@@ -19,26 +19,33 @@ Iter find_next(Iter begin, Iter end, const std::string& _delimiter) {
 }
 
 template <typename Protocol, typename Iter>
-void parse(Iter begin, Iter end, std::size_t& _current_begin,
-           std::size_t& _current_count, const std::string& _delimiter,
-           boost::container::vector<char>& _line_buffer, Protocol& protocol) {
-    _current_count += std::distance(begin, end);
+void core_loop(Iter& line_start, Iter& search_iter,
+               const std::string& _delimiter, std::size_t& _current_count,
+               std::size_t& _current_begin, Protocol& protocol) {
+    protocol.line_received(line_start, search_iter);
+    _current_count -=
+        std::distance(line_start, search_iter) + _delimiter.size();
+    _current_begin +=
+        std::distance(line_start, search_iter) + _delimiter.size();
+}
 
-    auto line_start = std::next(_line_buffer.begin(), _current_begin);
-    auto search_iter = find_next(line_start, end, _delimiter);
+template <typename Iter>
+bool loop_condition(Iter& search_iter, Iter end, Iter& line_start,
+                    std::size_t _current_begin,
+                    boost::container::vector<char>& _line_buffer,
+                    const std::string& _delimiter) {
+    line_start = std::next(_line_buffer.begin(), _current_begin);
+    search_iter = find_next(line_start, end, _delimiter);
 
-    while (search_iter != end) {
-        protocol.line_received(line_start, search_iter);
-        _current_count -=
-            std::distance(line_start, search_iter) + _delimiter.size();
-        _current_begin +=
-            std::distance(line_start, search_iter) + _delimiter.size();
+    return search_iter != end;
+}
 
-        line_start = std::next(search_iter, _delimiter.size());
-        search_iter = find_next(line_start, end, _delimiter);
-    }
-
-    if (_current_count == _line_buffer.size()) {
+inline void prepare_buffers(std::size_t _current_count,
+                            std::size_t& _current_begin,
+                            boost::container::vector<char>& _line_buffer) {
+    if (_current_count == 0) {
+        _current_begin = 0;
+    } else if (_current_count == _line_buffer.size()) {
         _line_buffer.resize(_line_buffer.size() * 2);
     } else if (_current_begin + _current_count == _line_buffer.size()) {
         std::copy(std::next(_line_buffer.begin(), _current_begin),
@@ -46,6 +53,24 @@ void parse(Iter begin, Iter end, std::size_t& _current_begin,
 
         _current_begin = 0;
     }
+}
+
+template <typename Protocol, typename Iter>
+void parse(Iter begin, Iter end, std::size_t& _current_begin,
+           std::size_t& _current_count, const std::string& _delimiter,
+           boost::container::vector<char>& _line_buffer, Protocol& protocol) {
+    _current_count += std::distance(begin, end);
+
+    Iter line_start;
+    Iter search_iter;
+
+    while (loop_condition(search_iter, end, line_start, _current_begin,
+                          _line_buffer, _delimiter)) {
+        core_loop(line_start, search_iter, _delimiter, _current_count,
+                  _current_begin, protocol);
+    }
+
+    prepare_buffers(_current_count, _current_begin, _line_buffer);
 }
 }
 }

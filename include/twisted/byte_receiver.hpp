@@ -28,7 +28,7 @@ public:
     byte_receiver(int start_bytes_size)
         : _next_bytes_size(start_bytes_size), _current_begin(0),
           _current_count(0),
-          _read_buffer(calculate_buffer_size(start_bytes_size)) {}
+          _read_buffer(byte::calculate_buffer_size(start_bytes_size)) {}
 
     template <typename Iter>
     void on_message(Iter begin, Iter end) {
@@ -49,20 +49,10 @@ public:
     }
 
     void set_package_size(size_type package_size) {
-        if (_next_bytes_size < package_size) {
-            _read_buffer.resize(calculate_buffer_size(package_size));
-        }
-
-        _next_bytes_size = package_size;
-
-        // evaluate different kinds of copying existing data + buffer size here
+        byte::set_package_size(package_size, _next_bytes_size, _read_buffer);
     }
 
 private:
-    constexpr size_type calculate_buffer_size(size_type new_min_size) const {
-        return 3 * new_min_size;
-    }
-
     size_type _next_bytes_size; // size per block
     // TODO evaluate whether copying each time is faster than tracking _current_begin
     size_type _current_begin; // start-position of not processed data in buffer
