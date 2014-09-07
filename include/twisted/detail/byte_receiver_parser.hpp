@@ -75,7 +75,10 @@ constexpr std::size_t calculate_buffer_size(std::size_t new_min_size) {
 inline void set_package_size(std::size_t package_size, std::size_t& _next_bytes_size,
                       boost::container::vector<char>& _read_buffer) {
     if (_next_bytes_size < package_size) {
-        _read_buffer.resize(calculate_buffer_size(package_size));
+        auto new_buffer_size = calculate_buffer_size(package_size);
+        if(new_buffer_size > _read_buffer.size()) {
+            _read_buffer.resize(new_buffer_size);
+        }
     }
 
     _next_bytes_size = package_size;
