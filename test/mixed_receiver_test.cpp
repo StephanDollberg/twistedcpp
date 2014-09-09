@@ -36,7 +36,6 @@ struct double_mixed_receiver_test : twisted::mixed_receiver<double_mixed_receive
     }
 
     void line_received(const_buffer_iterator begin, const_buffer_iterator end) {
-        std::cout << "line" << std::endl;
         send_message(begin, end);
 
         if(switch_mode == 1) {
@@ -49,7 +48,6 @@ struct double_mixed_receiver_test : twisted::mixed_receiver<double_mixed_receive
     }
 
     void bytes_received(const_buffer_iterator begin, const_buffer_iterator end) {
-        std::cout << "byte" << std::endl;
         send_message(begin, end);
 
         if(switch_mode == 1) {
