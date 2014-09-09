@@ -8,6 +8,7 @@
 #include <boost/optional.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/ref.hpp>
 
 #ifndef NDEBUG
 #include <iostream>
