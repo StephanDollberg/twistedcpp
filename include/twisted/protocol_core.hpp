@@ -47,17 +47,15 @@ public:
                 while (_socket->is_open()) {
                     auto bytes_read =
                         _socket->async_read_some(asio_buffer(), yield);
-                    checked_on_message(buffer_begin(),
-                                       std::next(buffer_begin(), bytes_read));
+                    this_protocol().on_message(
+                        buffer_begin(), std::next(buffer_begin(), bytes_read));
                 }
             }
-            catch (boost::system::system_error& connection_error) { // network
-                                                                    // errors
-                print_connection_error(connection_error);
-                this_protocol().on_disconnect();
+            catch (boost::system::system_error& connection_error) {
+                handle_network_error(connection_error);
             }
-            catch (const std::exception& excep) { // errors from user protocols
-                print_exception_what(excep);
+            catch (...) {
+                handle_user_error(std::current_exception());
             }
         });
     }
@@ -72,9 +70,22 @@ public:
         _socket->async_write(buffers, *_yield);
     }
 
+    /*
+     * @brief default on_disconnect implementation; does nothing
+     */
     void on_disconnect() {}
 
-    void on_error(std::exception_ptr eptr) { std::rethrow_exception(eptr); }
+    /*
+     * @brief default on_error implementation; swallows everything
+     */
+    void on_error(std::exception_ptr eptr) {
+        try {
+            std::rethrow_exception(eptr);
+        }
+        catch (const std::exception& excep) {
+            print_exception_what(excep);
+        }
+    }
 
     void lose_connection() { _socket->close(); }
 
@@ -93,34 +104,28 @@ public:
     }
 
 private:
-    void print_connection_error(
-
 #ifdef NDEBUG
-        const boost::system::system_error& /*connection_error*/) const {
+    void handle_network_error(boost::system::system_error&) {
 #else
+    void handle_network_error(boost::system::system_error& connection_error) {
+        print_connection_error(connection_error);
+#endif
+        this_protocol().on_disconnect();
+    }
+
+    void handle_user_error(const std::exception_ptr& excep) {
+        this_protocol().on_error(excep);
+    }
+
+    void print_connection_error(
         const boost::system::system_error& connection_error) const {
         std::cerr << "Client disconnected with code " << connection_error.what()
                   << std::endl;
-#endif
     }
 
-#ifdef NDEBUG
-    void print_exception_what(const std::exception& /*excep*/) {
-#else
     void print_exception_what(const std::exception& excep) {
         std::cerr << "Killing connection, exception in client handler: "
                   << excep.what() << std::endl;
-#endif
-    }
-
-    void checked_on_message(const_buffer_iterator begin,
-                            const_buffer_iterator end) {
-        try {
-            this_protocol().on_message(begin, end);
-        }
-        catch (...) {
-            this_protocol().on_error(std::current_exception());
-        }
     }
 
     buffer_iterator buffer_begin() {
