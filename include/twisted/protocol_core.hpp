@@ -8,6 +8,7 @@
 #include <boost/optional.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/high_resolution_timer.hpp>
 #include <boost/ref.hpp>
 
 #ifndef NDEBUG
@@ -58,6 +59,13 @@ public:
                 handle_user_error(std::current_exception());
             }
         });
+    }
+
+    template <typename Duration>
+    void wait_for(const Duration& duration) const {
+        boost::asio::high_resolution_timer timer(_socket->get_io_service(),
+                                                 duration);
+        timer.async_wait(*_yield);
     }
 
     template <typename Iter>
