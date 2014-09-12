@@ -61,6 +61,12 @@ public:
         });
     }
 
+    template <typename Callable, typename... Args>
+    void call_from_thread(Callable&& callable, Args&&... args) {
+        _socket->get_io_service().post(std::bind(
+            std::forward<Callable>(callable), std::forward<Args>(args)...));
+    }
+
     template <typename Duration>
     void wait_for(const Duration& duration) const {
         boost::asio::high_resolution_timer timer(_socket->get_io_service(),
