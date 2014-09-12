@@ -33,12 +33,11 @@ public:
 
     void set_socket(std::unique_ptr<socket_type> socket) {
         _socket = std::move(socket);
-        _strand = boost::in_place(boost::ref(_socket->get_io_service()));
     }
 
     void run_protocol() {
         auto self = this_protocol().shared_from_this();
-        boost::asio::spawn(*_strand,
+        boost::asio::spawn(_socket->get_io_service(),
                            [this, self](boost::asio::yield_context yield) {
             _yield = boost::in_place(yield);
 
@@ -164,7 +163,6 @@ private:
 private:
     boost::optional<boost::asio::yield_context> _yield;
     std::unique_ptr<socket_type> _socket;
-    boost::optional<strand_type> _strand;
 };
 
 } // namespace twisted
