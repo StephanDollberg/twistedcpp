@@ -65,12 +65,59 @@ struct disconnect_test_protocol
     bool& _disconnected;
 };
 
-TEST_CASE("on_disconnect test", "[tcp][reactor]") {
+
+TEST_CASE("on_disconnect test - disconnect from peer", "[tcp][protocol_core][on_disconnect]") {
     twisted::reactor reac;
     bool disconnected = false;
     auto fut = std::async(std::launch::async, [&]() {
         reac.listen_tcp(
             50000, [&]() { return disconnect_test_protocol(disconnected); });
+        reac.run();
+    });
+
+    boost::asio::io_service io_service;
+    tcp::socket socket(io_service);
+
+    BOOST_SCOPE_EXIT_TPL((&reac)(&socket)) {
+        reac.stop();
+        if (socket.is_open()) {
+            socket.close();
+        }
+    }
+    BOOST_SCOPE_EXIT_END
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+
+    socket.connect(tcp::endpoint(
+        boost::asio::ip::address::from_string("127.0.0.1"), 50000));
+
+    socket.close();
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    CHECK(disconnected == true);
+}
+
+struct local_disconnect_test_protocol
+    : twisted::basic_protocol<local_disconnect_test_protocol> {
+
+    local_disconnect_test_protocol(bool& disconnected)
+        : _disconnected(disconnected) {}
+
+    void on_message(const_buffer_iterator /* begin */,
+                    const_buffer_iterator /* end */) {
+        lose_connection();
+    }
+
+    void on_disconnect() { _disconnected = true; }
+
+    bool& _disconnected;
+};
+
+TEST_CASE("on_disconnect test - local disconnect", "[tcp][protocol_core][on_disconnect]") {
+    twisted::reactor reac;
+    bool disconnected = false;
+    auto fut = std::async(std::launch::async, [&]() {
+        reac.listen_tcp(
+            50000, [&]() { return local_disconnect_test_protocol(disconnected); });
         reac.run();
     });
 
