@@ -159,7 +159,7 @@ private:
                   << std::endl;
     }
 
-    void print_exception_what(const std::exception& excep) {
+    void print_exception_what(const std::exception& excep) const {
         std::cerr << "Killing connection, exception in client handler: "
                   << excep.what() << std::endl;
     }
