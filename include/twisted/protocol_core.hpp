@@ -60,6 +60,27 @@ public:
         });
     }
 
+    template <typename Duration, typename Callable>
+    void call_later(Duration duration, Callable callable) {
+        auto self = this_protocol().shared_from_this();
+        // we pass our existing yield_context and not the io_service such that
+        // both contexts run under the same strand
+        boost::asio::spawn(*_yield, [this, duration, callable, self](
+                                        boost::asio::yield_context yield) {
+            boost::asio::high_resolution_timer timer(_socket->get_io_service(),
+                                                     duration);
+            timer.async_wait(yield);
+
+            // we need to exchange the yield context so that that the user can
+            // use the send_message function in the right context
+            boost::optional<boost::asio::yield_context> old_yield(
+                boost::in_place(*_yield));
+            _yield = boost::in_place(yield);
+            callable();
+            _yield = boost::in_place(*old_yield);
+        });
+    }
+
     template <typename Callable, typename... Args>
     void call_from_thread(Callable&& callable, Args&&... args) {
         _socket->get_io_service().post(std::bind(
