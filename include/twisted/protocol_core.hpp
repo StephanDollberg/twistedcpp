@@ -47,16 +47,15 @@ public:
                 while (_socket->is_open()) {
                     auto bytes_read =
                         _socket->async_read_some(asio_buffer(), yield);
-                    this_protocol().on_message(
-                        buffer_begin(), std::next(buffer_begin(), bytes_read));
+                    checked_on_message(buffer_begin(),
+                                       std::next(buffer_begin(), bytes_read));
                 }
             }
             catch (boost::system::system_error& connection_error) {
                 handle_network_error(connection_error);
             }
-            catch (...) {
-                handle_user_error(std::current_exception());
-            }
+
+            this_protocol().on_disconnect();
         });
     }
 
@@ -140,13 +139,22 @@ public:
     }
 
 private:
+    void checked_on_message(const_buffer_iterator begin,
+                            const_buffer_iterator end) {
+        try {
+            this_protocol().on_message(begin, end);
+        }
+        catch (...) {
+            this_protocol().on_error(std::current_exception());
+        }
+    }
+
 #ifdef NDEBUG
     void handle_network_error(boost::system::system_error&) {
 #else
     void handle_network_error(boost::system::system_error& connection_error) {
         print_connection_error(connection_error);
 #endif
-        this_protocol().on_disconnect();
     }
 
     void handle_user_error(const std::exception_ptr& excep) {
