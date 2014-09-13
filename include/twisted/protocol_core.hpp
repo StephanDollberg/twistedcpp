@@ -80,6 +80,11 @@ public:
         });
     }
 
+    template <typename Callable>
+    void call(Callable callable) {
+        call_later(std::chrono::seconds(0), std::move(callable));
+    }
+
     template <typename Callable, typename... Args>
     void call_from_thread(Callable&& callable, Args&&... args) {
         _socket->get_io_service().post(std::bind(

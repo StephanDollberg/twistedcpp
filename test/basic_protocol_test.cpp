@@ -65,8 +65,8 @@ struct disconnect_test_protocol
     bool& _disconnected;
 };
 
-
-TEST_CASE("on_disconnect test - disconnect from peer", "[tcp][protocol_core][on_disconnect]") {
+TEST_CASE("on_disconnect test - disconnect from peer",
+          "[tcp][protocol_core][on_disconnect]") {
     twisted::reactor reac;
     bool disconnected = false;
     auto fut = std::async(std::launch::async, [&]() {
@@ -112,12 +112,14 @@ struct local_disconnect_test_protocol
     bool& _disconnected;
 };
 
-TEST_CASE("on_disconnect test - local disconnect", "[tcp][protocol_core][on_disconnect]") {
+TEST_CASE("on_disconnect test - local disconnect",
+          "[tcp][protocol_core][on_disconnect]") {
     twisted::reactor reac;
     bool disconnected = false;
     auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(
-            50000, [&]() { return local_disconnect_test_protocol(disconnected); });
+        reac.listen_tcp(50000, [&]() {
+            return local_disconnect_test_protocol(disconnected);
+        });
         reac.run();
     });
 
@@ -140,4 +142,14 @@ TEST_CASE("on_disconnect test - local disconnect", "[tcp][protocol_core][on_disc
     socket.close();
     std::this_thread::sleep_for(std::chrono::milliseconds(3));
     CHECK(disconnected == true);
+}
+
+struct call_test_protocol : twisted::basic_protocol<call_test_protocol> {
+    void on_message(const_buffer_iterator begin, const_buffer_iterator end) {
+        call([=]() { send_message(begin, end); });
+    }
+};
+
+TEST_CASE("call test", "[protocol_core][call]") {
+    test::single_send_and_recv<call_test_protocol>("TEST123", "TEST123");
 }
