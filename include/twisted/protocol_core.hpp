@@ -121,6 +121,8 @@ public:
         }
     }
 
+    bool is_connected() const { return _socket->is_open(); }
+
     void lose_connection() { _socket->close(); }
 
     /*
