@@ -1,5 +1,7 @@
 #include "catch/single_include/catch.hpp"
 
+#include "test_utils.hpp"
+
 #include "../include/twisted/mixed_receiver.hpp"
 #include "../include/twisted/reactor.hpp"
 #include "../include/twisted/default_factory.hpp"
@@ -62,44 +64,6 @@ struct double_mixed_receiver_test : twisted::mixed_receiver<double_mixed_receive
     int switch_mode;
 };
 
-template <typename ProtocolType>
-void message_tester(const std::vector<std::string>& send_input,
-                    const std::vector<std::string>& results) {
-    twisted::reactor reac;
-    auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(50000, twisted::default_factory<ProtocolType>());
-        reac.run();
-    });
-
-    boost::asio::io_service io_service;
-    tcp::socket socket(io_service);
-
-    BOOST_SCOPE_EXIT_TPL((&reac)(&socket)) {
-        reac.stop();
-        if (socket.is_open()) {
-            socket.close();
-        }
-    }
-    BOOST_SCOPE_EXIT_END
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(3));
-
-    socket.connect(tcp::endpoint(
-        boost::asio::ip::address::from_string("127.0.0.1"), 50000));
-
-    boost::for_each(send_input, [&](const std::string& input) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        boost::asio::write(socket, boost::asio::buffer(input));
-    });
-
-    boost::for_each(results, [&](const std::string& input) {
-        std::string buffer(input.size(), '\0');
-        boost::asio::read(socket,
-                          boost::asio::buffer(&buffer[0], buffer.size()));
-        CHECK(buffer == input);
-    });
-}
-
 TEST_CASE("mixed_receiver behavior tests",
           "[mixed_receiver][protocols][behavior]") {
     SECTION("perfect march 4 in 1") {
@@ -112,7 +76,7 @@ TEST_CASE("mixed_receiver behavior tests",
         test_results.push_back("CCC");
         test_results.push_back("DDDDD");
 
-        message_tester<mixed_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<mixed_receiver_test>(test_data, test_results);
     }
 
     SECTION("perfect match 4 in 4") {
@@ -128,7 +92,7 @@ TEST_CASE("mixed_receiver behavior tests",
         test_results.push_back("CCC");
         test_results.push_back("DDDDD");
 
-        message_tester<mixed_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<mixed_receiver_test>(test_data, test_results);
     }
 
     SECTION("double perfect march 8 in 1") {
@@ -145,7 +109,7 @@ TEST_CASE("mixed_receiver behavior tests",
         test_results.push_back("DDDDD");
         test_results.push_back("44444");
 
-        message_tester<double_mixed_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<double_mixed_receiver_test>(test_data, test_results);
     }
 
     SECTION("double perfect match 8 in 4") {
@@ -165,6 +129,6 @@ TEST_CASE("mixed_receiver behavior tests",
         test_results.push_back("DDDDD");
         test_results.push_back("44444");
 
-        message_tester<double_mixed_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<double_mixed_receiver_test>(test_data, test_results);
     }
 }

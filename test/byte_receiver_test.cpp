@@ -1,5 +1,7 @@
 #include "catch/single_include/catch.hpp"
 
+#include "test_utils.hpp"
+
 #include "../include/twisted/byte_receiver.hpp"
 #include "../include/twisted/reactor.hpp"
 #include "../include/twisted/default_factory.hpp"
@@ -42,44 +44,6 @@ struct byte_receiver_decrease_update_test : twisted::byte_receiver<byte_receiver
     }
 };
 
-template <typename ProtocolType>
-void message_tester(const std::vector<std::string>& send_input,
-                    const std::vector<std::string>& results) {
-    twisted::reactor reac;
-    auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(50000, twisted::default_factory<ProtocolType>());
-        reac.run();
-    });
-
-    boost::asio::io_service io_service;
-    tcp::socket socket(io_service);
-
-    BOOST_SCOPE_EXIT_TPL((&reac)(&socket)) {
-        reac.stop();
-        if (socket.is_open()) {
-            socket.close();
-        }
-    }
-    BOOST_SCOPE_EXIT_END
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(3));
-
-    socket.connect(tcp::endpoint(
-        boost::asio::ip::address::from_string("127.0.0.1"), 50000));
-
-    boost::for_each(send_input, [&](const std::string& input) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        boost::asio::write(socket, boost::asio::buffer(input));
-    });
-
-    boost::for_each(results, [&](const std::string& input) {
-        std::string buffer(input.size(), '\0');
-        boost::asio::read(socket,
-                          boost::asio::buffer(&buffer[0], buffer.size()));
-        CHECK(buffer == input);
-    });
-}
-
 TEST_CASE("byte_receiver behavior tests",
           "[byte_receiver][protocols][behavior]") {
     SECTION("perfect match 2 in 1") {
@@ -90,7 +54,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("AAA");
         test_results.push_back("BBB");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("perfect match 3 in 1") {
@@ -102,7 +66,7 @@ TEST_CASE("byte_receiver behavior tests",
         std::vector<std::string> test_results;
         test_results.push_back("AAA");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("perfect match 2 on 2") {
@@ -114,7 +78,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("AAA");
         test_results.push_back("BBB");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("open match 2 in 1") {
@@ -125,7 +89,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("AAA");
         test_results.push_back("BBB");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("open match 2 on 2") {
@@ -138,7 +102,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("AAA");
         test_results.push_back("BBB");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("end match 3 on 1") {
@@ -150,7 +114,7 @@ TEST_CASE("byte_receiver behavior tests",
         std::vector<std::string> test_results;
         test_results.push_back("ABC");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("no match 2 on 0") {
@@ -161,7 +125,7 @@ TEST_CASE("byte_receiver behavior tests",
         std::vector<std::string> test_results;
         test_results.push_back("");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("even wrap around") {
@@ -179,7 +143,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("DDD");
         test_results.push_back("EEE");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("uneven wrap around") {
@@ -198,7 +162,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("DDD");
         test_results.push_back("EEE");
 
-        message_tester<byte_receiver_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_test>(test_data, test_results);
     }
 
     SECTION("change package size - simple upgrade") {
@@ -210,7 +174,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("AA");
         test_results.push_back(std::string(20, 'X'));
 
-        message_tester<byte_receiver_update_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_update_test>(test_data, test_results);
     }
 
     SECTION("change package size - simple upgrade one shot") {
@@ -223,7 +187,7 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("AA");
         test_results.push_back(std::string(20, 'X'));
 
-        message_tester<byte_receiver_update_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_update_test>(test_data, test_results);
     }
 
     SECTION("decrease package size - simple upgrade") {
@@ -236,6 +200,6 @@ TEST_CASE("byte_receiver behavior tests",
         test_results.push_back("CC");
         test_results.push_back("DD");
 
-        message_tester<byte_receiver_decrease_update_test>(test_data, test_results);
+        test::multi_send_and_recv<byte_receiver_decrease_update_test>(test_data, test_results);
     }
 }
