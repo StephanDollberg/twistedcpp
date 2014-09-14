@@ -22,7 +22,7 @@ struct mixed_receiver_test : twisted::mixed_receiver<mixed_receiver_test> {
     }
 
     void line_received(const_buffer_iterator begin, const_buffer_iterator end) {
-        send_message(begin, end);
+        send_line(begin, end);
         set_byte_mode();
     }
 
@@ -71,9 +71,9 @@ TEST_CASE("mixed_receiver behavior tests",
         test_data.push_back("AAA\r\nBBBBBCCC\r\nDDDDD");
 
         std::vector<std::string> test_results;
-        test_results.push_back("AAA");
+        test_results.push_back("AAA\r\n");
         test_results.push_back("BBBBB");
-        test_results.push_back("CCC");
+        test_results.push_back("CCC\r\n");
         test_results.push_back("DDDDD");
 
         test::multi_send_and_recv<mixed_receiver_test>(test_data, test_results);
@@ -87,9 +87,9 @@ TEST_CASE("mixed_receiver behavior tests",
         test_data.push_back("DDDDD");
 
         std::vector<std::string> test_results;
-        test_results.push_back("AAA");
+        test_results.push_back("AAA\r\n");
         test_results.push_back("BBBBB");
-        test_results.push_back("CCC");
+        test_results.push_back("CCC\r\n");
         test_results.push_back("DDDDD");
 
         test::multi_send_and_recv<mixed_receiver_test>(test_data, test_results);
