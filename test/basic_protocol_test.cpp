@@ -12,6 +12,7 @@
 #include <vector>
 #include <string>
 #include <future>
+#include <chrono>
 
 using boost::asio::ip::tcp;
 
@@ -102,8 +103,7 @@ struct local_disconnect_test_protocol
     local_disconnect_test_protocol(bool& disconnected)
         : _disconnected(disconnected) {}
 
-    void on_message(const_buffer_iterator begin,
-                    const_buffer_iterator end) {
+    void on_message(const_buffer_iterator begin, const_buffer_iterator end) {
         send_message(begin, end);
         lose_connection();
     }
@@ -116,7 +116,8 @@ struct local_disconnect_test_protocol
 TEST_CASE("on_disconnect test - local disconnect",
           "[tcp][protocol_core][on_disconnect]") {
     bool disconnected = false;
-    test::single_send_and_recv<local_disconnect_test_protocol>("AAA", "AAA", disconnected);
+    test::single_send_and_recv<local_disconnect_test_protocol>("AAA", "AAA",
+                                                               disconnected);
     CHECK(disconnected == true);
 }
 
@@ -128,4 +129,29 @@ struct call_test_protocol : twisted::basic_protocol<call_test_protocol> {
 
 TEST_CASE("call test", "[protocol_core][call]") {
     test::single_send_and_recv<call_test_protocol>("TEST123", "TEST123");
+}
+
+struct call_from_thread_test_protocol
+    : twisted::basic_protocol<call_from_thread_test_protocol> {
+    call_from_thread_test_protocol(bool& flag) : _flag(flag) {}
+
+    void on_message(const_buffer_iterator begin, const_buffer_iterator end) {
+        send_message(begin, end);
+        auto self = shared_from_this();
+        call_from_thread([&, self]() {
+            // Don't ever do this in user code - it's not the way
+            // call_from_thread is supposed to be used
+            _flag = true;
+        });
+    }
+
+    bool& _flag;
+};
+
+TEST_CASE("call from thread test", "[protocol_core][call_from_thread]") {
+    bool flag = false;
+    test::single_send_and_recv<call_from_thread_test_protocol>("AAA", "AAA",
+                                                               flag);
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    CHECK(flag == true);
 }
