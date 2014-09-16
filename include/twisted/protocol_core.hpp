@@ -178,17 +178,23 @@ private:
     }
 
     buffer_iterator buffer_begin() {
-        return this_protocol().read_buffer().begin();
+        using std::begin;
+        return begin(this_protocol().read_buffer());
     }
 
     buffer_iterator buffer_begin() const {
-        return this_protocol().read_buffer().begin();
+        using std::begin;
+        return begin(this_protocol().read_buffer());
     }
 
-    buffer_iterator buffer_end() { return this_protocol().read_buffer().end(); }
+    buffer_iterator buffer_end() {
+        using std::end;
+        return end(this_protocol().read_buffer());
+    }
 
     buffer_iterator buffer_end() const {
-        return this_protocol().read_buffer().end();
+        using std::end;
+        return end(this_protocol().read_buffer());
     }
 
     boost::asio::mutable_buffers_1 asio_buffer() {
