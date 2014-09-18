@@ -21,7 +21,7 @@ int main() {
 ```
 ### Feature Support
  - [Line Receiver (Delimited String)] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#line-receiver)
- - [Byte Receiver (N Bytes] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#byte-receiver)
+ - [Byte Receiver (N Bytes)] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#byte-receiver)
  - [Mixed Receiver (Line + Byte)] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#mixed-receiver)
  - [Factories] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#factories)
  - [TCP + SSL Transports] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#transport-types)
