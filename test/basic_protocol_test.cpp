@@ -155,3 +155,65 @@ TEST_CASE("call from thread test", "[protocol_core][call_from_thread]") {
     std::this_thread::sleep_for(std::chrono::milliseconds(3));
     CHECK(flag == true);
 }
+
+struct forward_test_protocol : twisted::basic_protocol<forward_test_protocol> {
+    std::vector<forward_test_protocol*>& _clients;
+    forward_test_protocol(std::vector<forward_test_protocol*>& clients)
+        : _clients(clients) {}
+
+    forward_test_protocol(forward_test_protocol&& other)
+        : _clients(other._clients) {
+        _clients.push_back(this);
+    }
+
+    void on_message(const_buffer_iterator begin, const_buffer_iterator end) {
+        for (auto&& client : _clients) {
+            if (client != this) {
+                forward(*client, begin, end);
+            }
+        }
+    };
+};
+
+TEST_CASE("forward", "[protocol_core][forward]") {
+    twisted::reactor reac;
+    std::vector<forward_test_protocol*> clients;
+    auto fut = std::async(std::launch::async, [&]() {
+        reac.listen_tcp(50000,
+                        [&]() { return forward_test_protocol(clients); });
+        reac.run();
+    });
+
+    boost::asio::io_service io_service;
+    tcp::socket socket_sender(io_service);
+    tcp::socket socket_receiver(io_service);
+
+    BOOST_SCOPE_EXIT_TPL((&reac)(&socket_sender)(&socket_receiver)) {
+        reac.stop();
+        if (socket_sender.is_open()) {
+            socket_sender.close();
+        }
+
+        if (socket_receiver.is_open()) {
+            socket_receiver.close();
+        }
+    }
+    BOOST_SCOPE_EXIT_END
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+
+    socket_receiver.connect(tcp::endpoint(
+        boost::asio::ip::address::from_string("127.0.0.1"), 50000));
+    socket_sender.connect(tcp::endpoint(
+        boost::asio::ip::address::from_string("127.0.0.1"), 50000));
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(3));
+
+    std::string send_buffer("XXX");
+    boost::asio::write(socket_sender, boost::asio::buffer(send_buffer));
+
+    std::string recv_buffer(send_buffer.size(), '\0');
+    boost::asio::read(socket_receiver,
+                      boost::asio::buffer(&recv_buffer[0], recv_buffer.size()));
+    CHECK(send_buffer == recv_buffer);
+}

@@ -104,6 +104,12 @@ public:
             boost::asio::buffer(&*begin, std::distance(begin, end)), *_yield);
     }
 
+    template <typename Iter>
+    void forward(const protocol_core& other, Iter begin, Iter end) {
+        other._socket->async_write(
+            boost::asio::buffer(&*begin, std::distance(begin, end)), *_yield);
+    }
+
     void send_buffers(const std::array<boost::asio::const_buffer, 2>& buffers) {
         _socket->async_write(buffers, *_yield);
     }
