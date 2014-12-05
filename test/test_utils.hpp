@@ -18,11 +18,11 @@ using boost::asio::ip::tcp;
 
 namespace test {
 
-template<typename ProtocolType, typename ...Args>
-void single_send_and_recv(std::string send, std::string recv, Args&&... args) {
+template<typename ProtocolType, typename Factory>
+void single_send_and_recv(std::string send, std::string recv, const Factory& factory) {
     twisted::reactor reac;
     auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(50000, [&] () { return ProtocolType(std::forward<Args>(args)...); });
+        reac.listen_tcp(50000, factory);
         reac.run();
     });
 
@@ -49,12 +49,12 @@ void single_send_and_recv(std::string send, std::string recv, Args&&... args) {
     CHECK(buffer == recv);
 }
 
-template <typename ProtocolType, typename ...Args>
+template <typename ProtocolType>
 void multi_send_and_recv(const std::vector<std::string>& send_input,
-                    const std::vector<std::string>& results, Args&&... args) {
+                    const std::vector<std::string>& results) {
     twisted::reactor reac;
     auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(50000, [&] () { return ProtocolType(std::forward<Args>(args)...); });
+        reac.listen_tcp(50000, [&] () { return ProtocolType(); });
         reac.run();
     });
 

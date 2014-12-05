@@ -23,7 +23,8 @@ struct echo_protocol : twisted::basic_protocol<echo_protocol> {
 };
 
 TEST_CASE("basic tcp send & recv test", "[tcp][reactor]") {
-    test::single_send_and_recv<echo_protocol>("TEST123", "TEST123");
+    test::single_send_and_recv<echo_protocol>(
+        "TEST123", "TEST123", twisted::default_factory<echo_protocol>());
 }
 
 struct error_test_protocol : twisted::basic_protocol<error_test_protocol> {
@@ -40,7 +41,8 @@ struct error_test_protocol : twisted::basic_protocol<error_test_protocol> {
 };
 
 TEST_CASE("on_error test", "[tcp][reactor]") {
-    test::single_send_and_recv<error_test_protocol>("TEST123", "TEST123");
+    test::single_send_and_recv<error_test_protocol>(
+        "TEST123", "TEST123", twisted::default_factory<error_test_protocol>());
 }
 
 TEST_CASE("on_error test - protocol is fully functioning after error",
@@ -116,8 +118,9 @@ struct local_disconnect_test_protocol
 TEST_CASE("on_disconnect test - local disconnect",
           "[tcp][protocol_core][on_disconnect]") {
     bool disconnected = false;
-    test::single_send_and_recv<local_disconnect_test_protocol>("AAA", "AAA",
-                                                               disconnected);
+    test::single_send_and_recv<local_disconnect_test_protocol>(
+        "AAA", "AAA",
+        [&] { return local_disconnect_test_protocol(disconnected); });
     CHECK(disconnected == true);
 }
 
@@ -128,7 +131,8 @@ struct call_test_protocol : twisted::basic_protocol<call_test_protocol> {
 };
 
 TEST_CASE("call test", "[protocol_core][call]") {
-    test::single_send_and_recv<call_test_protocol>("TEST123", "TEST123");
+    test::single_send_and_recv<call_test_protocol>(
+        "TEST123", "TEST123", twisted::default_factory<call_test_protocol>());
 }
 
 struct call_from_thread_test_protocol
@@ -150,8 +154,8 @@ struct call_from_thread_test_protocol
 
 TEST_CASE("call from thread test", "[protocol_core][call_from_thread]") {
     bool flag = false;
-    test::single_send_and_recv<call_from_thread_test_protocol>("AAA", "AAA",
-                                                               flag);
+    test::single_send_and_recv<call_from_thread_test_protocol>(
+        "AAA", "AAA", [&] { return call_from_thread_test_protocol(flag); });
     std::this_thread::sleep_for(std::chrono::milliseconds(3));
     CHECK(flag == true);
 }
