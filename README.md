@@ -30,4 +30,11 @@ int main() {
 
 Check the [Tutorials] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials) for a detailed explanation of everything.
 
+### Using/Installing twistedcpp
+
+twistedcpp is header only so you don't need to build anything. You can either add include/twisted to your compiler include path(e.g.: -I/path/to/twisted/include or put it to /usr/local/include) or copy the files to your local project.
+Dependencies
+
+The only dependency is a recent C++11 compiler and boost.
+
 More work, help and projects very appreciated. 
