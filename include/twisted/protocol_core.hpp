@@ -110,7 +110,8 @@ public:
             boost::asio::buffer(&*begin, std::distance(begin, end)), *_yield);
     }
 
-    void send_buffers(const std::array<boost::asio::const_buffer, 2>& buffers) {
+    template<typename ConstBufferSequence>
+    void send_buffers(const ConstBufferSequence& buffers) {
         _socket->async_write(buffers, *_yield);
     }
 
