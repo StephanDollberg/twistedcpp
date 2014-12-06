@@ -1,3 +1,8 @@
+/*
+    - Contains the parsing functionality of the byte_receiver protocol
+    - Split up for testability and reusability in mixed_receiver
+*/
+
 #ifndef TWISTEDCPP_BYTE_RECEIVER_PARSER
 #define TWISTEDCPP_BYTE_RECEIVER_PARSER
 
@@ -23,12 +28,14 @@ void core_loop(std::size_t& _current_count, std::size_t& _current_begin,
        */
     std::size_t old_package_size = _next_bytes_size;
 
-    protocol.bytes_received(
-        std::next(_read_buffer.begin(), _current_begin),
-        std::next(_read_buffer.begin(), _current_begin + _next_bytes_size));
+    auto buffer_begin = _current_begin;
 
-    _current_count -= old_package_size;
     _current_begin += old_package_size;
+    _current_count -= old_package_size;
+
+    protocol.bytes_received(
+        std::next(_read_buffer.begin(), buffer_begin),
+        std::next(_read_buffer.begin(), buffer_begin + _next_bytes_size));
 }
 
 inline bool loop_condition(std::size_t _current_count,
@@ -64,8 +71,6 @@ void parse(Iter begin, Iter end, std::size_t& _current_begin,
     while (loop_condition(_current_count, _next_bytes_size)) {
         core_loop(_current_count, _current_begin, _read_buffer, _next_bytes_size, protocol);
     }
-
-    prepare_buffers(_current_count, _current_begin, _read_buffer);
 }
 
 constexpr std::size_t calculate_buffer_size(std::size_t new_min_size) {

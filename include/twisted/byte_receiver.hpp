@@ -34,6 +34,8 @@ public:
     void on_message(Iter begin, Iter end) {
         byte::parse(begin, end, _current_begin, _current_count,
                     _next_bytes_size, _read_buffer, this->this_protocol());
+
+        byte::prepare_buffers(_current_count, _current_begin, _read_buffer);
     }
 
     buffer_type read_buffer() {
@@ -52,9 +54,31 @@ public:
         byte::set_package_size(package_size, _next_bytes_size, _read_buffer);
     }
 
+    buffer_type next_package() {
+        byte::prepare_buffers(_current_count, _current_begin, _read_buffer);
+
+        if (_next_bytes_size < _current_count) {
+            _current_begin += _next_bytes_size;
+            _current_count -= _next_bytes_size;
+        } else {
+            this->read_more(std::next(_read_buffer.begin(),
+                                      _current_begin + _current_count),
+                            std::next(_read_buffer.begin(),
+                                      _current_begin + _next_bytes_size));
+            _current_count = 0;
+        }
+
+        auto ret = boost::make_iterator_range(
+            std::next(_read_buffer.begin(), _current_begin),
+            std::next(_read_buffer.begin(), _current_begin + _next_bytes_size));
+
+        return ret;
+    }
+
 private:
     size_type _next_bytes_size; // size per block
-    // TODO evaluate whether copying each time is faster than tracking _current_begin
+    // TODO evaluate whether copying each time is faster than tracking
+    // _current_begin
     size_type _current_begin; // start-position of not processed data in buffer
     size_type _current_count; // current amount of not processed data
     internal_buffer_type _read_buffer;

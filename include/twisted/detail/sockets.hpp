@@ -4,6 +4,7 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/spawn.hpp>
+#include <boost/asio/read.hpp>
 
 namespace twisted {
 
@@ -13,6 +14,7 @@ public:
     virtual void do_handshake(boost::asio::yield_context) = 0;
     virtual std::size_t async_read_some(boost::asio::mutable_buffers_1,
                                         boost::asio::yield_context) = 0;
+    virtual void async_read(boost::asio::mutable_buffers_1, boost::asio::yield_context) = 0;
     virtual bool is_open() const = 0;
     virtual void close() = 0;
     virtual void async_write(boost::asio::const_buffers_1,
@@ -38,6 +40,11 @@ public:
     virtual std::size_t async_read_some(boost::asio::mutable_buffers_1 buffers,
                                         boost::asio::yield_context yield) {
         return _socket.async_read_some(buffers, yield);
+    }
+
+    virtual void async_read(boost::asio::mutable_buffers_1 buffers,
+                             boost::asio::yield_context yield) {
+        boost::asio::async_read(_socket, buffers, yield);
     }
 
     virtual void async_write(boost::asio::const_buffers_1 buffers,
@@ -89,6 +96,11 @@ public:
     virtual std::size_t async_read_some(boost::asio::mutable_buffers_1 buffers,
                                         boost::asio::yield_context yield) {
         return _socket.async_read_some(buffers, yield);
+    }
+
+    virtual void async_read(boost::asio::mutable_buffers_1 buffers,
+                             boost::asio::yield_context yield) {
+        boost::asio::async_read(_socket, buffers, yield);
     }
 
     virtual void async_write(boost::asio::const_buffers_1 buffers,

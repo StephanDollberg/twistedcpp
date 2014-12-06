@@ -44,6 +44,18 @@ struct byte_receiver_decrease_update_test : twisted::byte_receiver<byte_receiver
     }
 };
 
+struct next_packet_test : twisted::byte_receiver<next_packet_test> {
+    next_packet_test() : byte_receiver(4) {}
+
+    void bytes_received(const_buffer_iterator begin, const_buffer_iterator end) {
+        send_message(begin, end);
+
+        set_package_size(2);
+        auto ret = next_package();
+        send_message(ret.begin(), ret.end());
+    }
+};
+
 TEST_CASE("byte_receiver behavior tests",
           "[byte_receiver][protocols][behavior]") {
     SECTION("perfect match 2 in 1") {
@@ -202,4 +214,17 @@ TEST_CASE("byte_receiver behavior tests",
 
         test::multi_send_and_recv<byte_receiver_decrease_update_test>(test_data, test_results);
     }
+
+
+}
+
+TEST_CASE("next_package", "[byte_receiver][protocols][behavior][next_package]") {
+    std::vector<std::string> test_data;
+    test_data.push_back("AAAABB");
+
+    std::vector<std::string> test_results;
+    test_results.push_back("AAAA");
+    test_results.push_back("BB");
+
+    test::multi_send_and_recv<next_packet_test>(test_data, test_results);
 }
