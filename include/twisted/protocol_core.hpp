@@ -8,7 +8,9 @@
 #include <boost/optional.hpp>
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/write.hpp>
+#include <boost/asio/read.hpp>
 #include <boost/asio/high_resolution_timer.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <boost/ref.hpp>
 
 #ifndef NDEBUG
@@ -113,6 +115,12 @@ public:
     template<typename ConstBufferSequence>
     void send_buffers(const ConstBufferSequence& buffers) {
         _socket->async_write(buffers, *_yield);
+    }
+
+    template <typename Iter>
+    void read_more(Iter begin, Iter end) {
+            _socket->async_read(boost::asio::buffer(&*begin, std::distance(begin, end)),
+            *_yield);
     }
 
     /*
