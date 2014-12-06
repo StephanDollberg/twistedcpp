@@ -51,7 +51,7 @@ struct next_packet_test : twisted::byte_receiver<next_packet_test> {
         send_message(begin, end);
 
         set_package_size(2);
-        auto ret = next_package();
+        auto ret = next_packet();
         send_message(ret.begin(), ret.end());
     }
 };
@@ -218,7 +218,7 @@ TEST_CASE("byte_receiver behavior tests",
 
 }
 
-TEST_CASE("next_package", "[byte_receiver][protocols][behavior][next_package]") {
+TEST_CASE("next_packet", "[byte_receiver][protocols][behavior][next_packet]") {
     std::vector<std::string> test_data;
     test_data.push_back("AAAABB");
 

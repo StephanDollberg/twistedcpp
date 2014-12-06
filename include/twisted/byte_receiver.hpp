@@ -54,7 +54,7 @@ public:
         byte::set_package_size(package_size, _next_bytes_size, _read_buffer);
     }
 
-    buffer_type next_package() {
+    buffer_type next_packet() {
         byte::prepare_buffers(_current_count, _current_begin, _read_buffer);
 
         if (_next_bytes_size < _current_count) {
