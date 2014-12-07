@@ -5,6 +5,15 @@
 
 namespace twisted {
 
+/**
+ * @brief Basic protocol around the protocol interface
+ *
+ * Provided callbacks:
+ *
+ * void on_message(const_buffer_iterator begin, const_buffer_iterator end);
+ *
+ * Will be called whenever data is received. [begin, end) is the data range.
+ */
 template <typename ChildProtocol>
 class basic_protocol : public protocol_core<ChildProtocol, std::vector<char>> {
 public:

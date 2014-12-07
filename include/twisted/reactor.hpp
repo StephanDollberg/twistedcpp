@@ -14,8 +14,15 @@
 
 namespace twisted {
 
+/**
+ * @brief Reactor class to listen on certain protocols
+ */
 class reactor {
 public:
+    /**
+     * @brief Starts the reactor
+     * @param thread_count Number of threads the reactor shall use
+     */
     void run(int thread_count = 1) {
         for (int i = 0; i != thread_count - 1; ++i) {
             worker_threads.emplace_back([&] { _io_service.run(); });
@@ -24,6 +31,9 @@ public:
         _io_service.run();
     }
 
+    /**
+     * @brief Stops the reactor
+     */
     void stop() {
         _io_service.stop();
 
@@ -32,6 +42,11 @@ public:
         }
     }
 
+    /**
+     * @brief Registers a tcp listener
+     * @param port Port to listen on
+     * @param factory Factory that produces the protocol that shall be used
+     */
     template <typename ProtocolFactory>
     void listen_tcp(int port, ProtocolFactory factory) {
         boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {
@@ -41,6 +56,14 @@ public:
         });
     }
 
+    /**
+     * @brief Registers a ssl/tls listener
+     * @param port Port to listen on
+     * @param factory Factory that produces the protocol that shall be used
+     * @param ssl_opts <a
+     * href="http://www.boost.org/doc/libs/1_57_0/doc/html/boost_asio/reference/ssl__context.html">boost::asio
+     * ssl context</a> - sets the ssl/tls options
+     */
     template <typename ProtocolFactory>
     void listen_ssl(int port, ProtocolFactory factory, ssl_options&& ssl_opts) {
         std::shared_ptr<ssl_options> ssl_opts_ptr // move capture

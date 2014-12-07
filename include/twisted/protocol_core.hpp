@@ -19,6 +19,14 @@
 
 namespace twisted {
 
+/**
+ * @brief Core buffer interface of all protocols. Provides all the basic
+ * functions like deferreds or send_message. You will only inherit from this if
+ * you use the buffer interface. Otherwise you probably want the basic_protocol
+ * or other more specialized protocols.
+ * @tparam ChildProtocol CRTP child protocol parameter
+ * @tparam BufferType Buffer interface buffer type
+ */
 template <typename ChildProtocol, typename BufferType>
 class protocol_core : public std::enable_shared_from_this<ChildProtocol> {
 public:
@@ -61,6 +69,12 @@ public:
         });
     }
 
+    /**
+     * @brief Runs the callback after the given duration in the context of the
+     * current protocol instance.
+     * @param duration std::chrono duration
+     * @param callable Callback
+     */
     template <typename Duration, typename Callable>
     void call_later(Duration duration, Callable callable) {
         auto self = this_protocol().shared_from_this();
@@ -82,17 +96,30 @@ public:
         });
     }
 
+    /**
+     * @brief Equal to call_later(std::chrono::seconds(0));
+     */
     template <typename Callable>
     void call(Callable callable) {
         call_later(std::chrono::seconds(0), std::move(callable));
     }
 
+    /**
+     * @brief Executes the given callback with the passed args out of the
+     * context of the current protocol instance in a different thread.
+     * @param callable Callback to execute
+     * @param args Arguments to pass the callback
+     */
     template <typename Callable, typename... Args>
     void call_from_thread(Callable&& callable, Args&&... args) {
         _socket->get_io_service().post(std::bind(
             std::forward<Callable>(callable), std::forward<Args>(args)...));
     }
 
+    /**
+     * @brief Waits/Sleeps for the given duration
+     * @param duration std::chrono duration
+     */
     template <typename Duration>
     void wait_for(const Duration& duration) const {
         boost::asio::high_resolution_timer timer(_socket->get_io_service(),
@@ -100,27 +127,50 @@ public:
         timer.async_wait(*_yield);
     }
 
+    /**
+     * @brief Send data to the connected client
+     * @param begin Data range begin
+     * @param end Data range end
+     */
     template <typename Iter>
     void send_message(Iter begin, Iter end) {
         _socket->async_write(
             boost::asio::buffer(&*begin, std::distance(begin, end)), *_yield);
     }
 
+    /**
+     * @brief Sends data on the connection of the passed protocol instance
+     * @param other Protocol instance to which the data shall be sent
+     * @param begin Data range begin
+     * @param end Data range end
+     */
     template <typename Iter>
     void forward(const protocol_core& other, Iter begin, Iter end) {
         other._socket->async_write(
             boost::asio::buffer(&*begin, std::distance(begin, end)), *_yield);
     }
 
-    template<typename ConstBufferSequence>
+    /**
+     * @brief Scatter/gather sending.
+     * @param buffers Valid <a
+     * href="https://www.boost.org/doc/libs/1_57_0/doc/html/boost_asio/overview/core/buffers.html">boost::asio
+     * buffers</a>
+     */
+    template <typename ConstBufferSequence>
     void send_buffers(const ConstBufferSequence& buffers) {
         _socket->async_write(buffers, *_yield);
     }
 
+    /**
+     * @brief Actively request more data without returning to the callback.
+     * Reads end - begin bytes of data
+     * @param begin Begin of the buffer
+     * @param end End of the buffer
+     */
     template <typename Iter>
     void read_more(Iter begin, Iter end) {
-            _socket->async_read(boost::asio::buffer(&*begin, std::distance(begin, end)),
-            *_yield);
+        _socket->async_read(
+            boost::asio::buffer(&*begin, std::distance(begin, end)), *_yield);
     }
 
     /*
@@ -140,18 +190,24 @@ public:
         }
     }
 
+    /**
+     * @brief returns whether the connection is still open
+     */
     bool is_connected() const { return _socket->is_open(); }
 
+    /**
+     * @brief closes the connection
+     */
     void lose_connection() { _socket->close(); }
 
-    /*
+    /**
      * @brief CRTP wrapper for derived class access
      */
     ChildProtocol& this_protocol() {
         return *static_cast<ChildProtocol*>(this);
     }
 
-    /*
+    /**
      * @brief CRTP wrapper for derived class access
      */
     const ChildProtocol& this_protocol() const {

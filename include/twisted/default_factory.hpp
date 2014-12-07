@@ -3,6 +3,9 @@
 
 namespace twisted {
 
+/**
+ * @brief Default Factory - equal to [] { return Protocol(); }
+ */
 template <typename Protocol>
 struct default_factory {
     Protocol operator()() const { return Protocol(); }

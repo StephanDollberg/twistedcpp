@@ -13,6 +13,16 @@
 
 namespace twisted {
 
+/**
+ * @brief Protocol to receive N bytes
+ *
+ * Provided callbacks:
+ *
+ * void bytes_received(const_buffer_iterator begin, const_buffer_iterator end);
+ *
+ * Will be called whenever N bytes have been received. [begin, end) is the data
+ * range.
+ */
 template <typename ChildProtocol>
 class byte_receiver
     : public twisted::protocol_core<
@@ -25,6 +35,9 @@ public:
     typedef boost::iterator_range<internal_buffer_type::const_iterator>
     const_buffer_type;
 
+    /**
+     * @brief Set the initial packet size
+     */
     byte_receiver(int start_bytes_size)
         : _next_bytes_size(start_bytes_size), _current_begin(0),
           _current_count(0),
@@ -50,10 +63,17 @@ public:
             _read_buffer.end());
     }
 
+    /**
+     * @brief sets the size in bytes of the next packet to read
+     */
     void set_package_size(size_type package_size) {
         byte::set_package_size(package_size, _next_bytes_size, _read_buffer);
     }
 
+    /**
+     * @brief Reads the next packet
+     * @returns Iterator range representing the new range
+     */
     buffer_type next_packet() {
         byte::prepare_buffers(_current_count, _current_begin, _read_buffer);
 
