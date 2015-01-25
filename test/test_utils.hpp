@@ -13,18 +13,31 @@
 #include <future>
 #include <vector>
 #include <string>
+#include <memory>
 
 using boost::asio::ip::tcp;
 
 namespace test {
 
-template<typename ProtocolType, typename Factory>
-void single_send_and_recv(std::string send, std::string recv, const Factory& factory) {
+template<typename ProtocolType>
+struct launcher {
+    twisted::reactor& _reac;
+
+    launcher(twisted::reactor& reac) : _reac(reac) {}
+
+    template<typename... Args>
+    void operator()(Args&&... args) {
+        _reac.listen_tcp<ProtocolType>(50000, std::forward<Args>(args)...);
+        _reac.run();
+    }
+};
+
+template<typename ProtocolType, typename... Args>
+void single_send_and_recv(std::string send, std::string recv, Args&&... args) {
     twisted::reactor reac;
-    auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(50000, factory);
-        reac.run();
-    });
+    launcher<ProtocolType> launch(reac);
+    auto fut = std::async(std::launch::async,
+                          launch, std::ref(std::forward<Args>(args))...);
 
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
@@ -54,7 +67,7 @@ void multi_send_and_recv(const std::vector<std::string>& send_input,
                     const std::vector<std::string>& results) {
     twisted::reactor reac;
     auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(50000, [&] () { return ProtocolType(); });
+        reac.listen_tcp<ProtocolType>(50000);
         reac.run();
     });
 

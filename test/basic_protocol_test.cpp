@@ -24,7 +24,7 @@ struct echo_protocol : twisted::basic_protocol<echo_protocol> {
 
 TEST_CASE("basic tcp send & recv test", "[tcp][reactor]") {
     test::single_send_and_recv<echo_protocol>(
-        "TEST123", "TEST123", twisted::default_factory<echo_protocol>());
+        "TEST123", "TEST123");
 }
 
 struct error_test_protocol : twisted::basic_protocol<error_test_protocol> {
@@ -42,7 +42,7 @@ struct error_test_protocol : twisted::basic_protocol<error_test_protocol> {
 
 TEST_CASE("on_error test", "[tcp][reactor]") {
     test::single_send_and_recv<error_test_protocol>(
-        "TEST123", "TEST123", twisted::default_factory<error_test_protocol>());
+        "TEST123", "TEST123");
 }
 
 TEST_CASE("on_error test - protocol is fully functioning after error",
@@ -73,8 +73,8 @@ TEST_CASE("on_disconnect test - disconnect from peer",
     twisted::reactor reac;
     bool disconnected = false;
     auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(
-            50000, [&]() { return disconnect_test_protocol(disconnected); });
+        reac.listen_tcp<disconnect_test_protocol>(
+            50000, disconnected);
         reac.run();
     });
 
@@ -119,8 +119,7 @@ TEST_CASE("on_disconnect test - local disconnect",
           "[tcp][protocol_core][on_disconnect]") {
     bool disconnected = false;
     test::single_send_and_recv<local_disconnect_test_protocol>(
-        "AAA", "AAA",
-        [&] { return local_disconnect_test_protocol(disconnected); });
+        "AAA", "AAA", disconnected);
     CHECK(disconnected == true);
 }
 
@@ -132,7 +131,7 @@ struct call_test_protocol : twisted::basic_protocol<call_test_protocol> {
 
 TEST_CASE("call test", "[protocol_core][call]") {
     test::single_send_and_recv<call_test_protocol>(
-        "TEST123", "TEST123", twisted::default_factory<call_test_protocol>());
+        "TEST123", "TEST123");
 }
 
 struct call_from_thread_test_protocol
@@ -155,7 +154,7 @@ struct call_from_thread_test_protocol
 TEST_CASE("call from thread test", "[protocol_core][call_from_thread]") {
     bool flag = false;
     test::single_send_and_recv<call_from_thread_test_protocol>(
-        "AAA", "AAA", [&] { return call_from_thread_test_protocol(flag); });
+        "AAA", "AAA", flag);
     std::this_thread::sleep_for(std::chrono::milliseconds(3));
     CHECK(flag == true);
 }
@@ -163,10 +162,7 @@ TEST_CASE("call from thread test", "[protocol_core][call_from_thread]") {
 struct forward_test_protocol : twisted::basic_protocol<forward_test_protocol> {
     std::vector<forward_test_protocol*>& _clients;
     forward_test_protocol(std::vector<forward_test_protocol*>& clients)
-        : _clients(clients) {}
-
-    forward_test_protocol(forward_test_protocol&& other)
-        : _clients(other._clients) {
+        : _clients(clients) {
         _clients.push_back(this);
     }
 
@@ -183,8 +179,7 @@ TEST_CASE("forward", "[protocol_core][forward]") {
     twisted::reactor reac;
     std::vector<forward_test_protocol*> clients;
     auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_tcp(50000,
-                        [&]() { return forward_test_protocol(clients); });
+        reac.listen_tcp<forward_test_protocol>(50000, clients);
         reac.run();
     });
 

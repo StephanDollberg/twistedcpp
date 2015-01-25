@@ -22,9 +22,8 @@ struct echo_protocol : twisted::basic_protocol<echo_protocol> {
 TEST_CASE("basic ssl send & recv test", "[ssl][reactor]") {
     twisted::reactor reac;
     auto fut = std::async(std::launch::async, [&]() {
-        reac.listen_ssl(
-            50000, twisted::default_factory<echo_protocol>(),
-            twisted::default_ssl_options("server.crt", "server.key", "ikn1"));
+        reac.listen_ssl<echo_protocol>(
+            50000, twisted::default_ssl_options("server.crt", "server.key", "ikn1"));
         reac.run();
     });
 
