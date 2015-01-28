@@ -5,7 +5,6 @@ Porting twisted to C++ using `boost::asio` coroutines.
 ``` cpp
 #include <twisted/reactor.hpp>
 #include <twisted/basic_protocol.hpp>
-#include <twisted/default_factory.hpp>
 
 struct echo_protocol : twisted::basic_protocol<echo_protocol> {
     void on_message(const_buffer_iterator begin, const_buffer_iterator end) { 
@@ -15,7 +14,7 @@ struct echo_protocol : twisted::basic_protocol<echo_protocol> {
 
 int main() {
     twisted::reactor reac;
-    reac.listen_tcp(50000, twisted::default_factory<echo_protocol>());
+    reac.listen_tcp<echo_protocol>(50000);
     reac.run();
 }
 ```
@@ -23,7 +22,6 @@ int main() {
  - [Line Receiver (Delimited String)] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#line-receiver)
  - [Byte Receiver (N Bytes)] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#byte-receiver)
  - [Mixed Receiver (Line + Byte)] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#mixed-receiver)
- - [Factories] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#factories)
  - [TCP + SSL Transports] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#transport-types)
  - [Deferreds] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#using-deferreds---aka-async-callbacks)
  - [Buffer Interface] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutorials#the-buffer-interface---aka-using-the-protocol_core)
