@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['default_5ffactory',['default_factory',['../structtwisted_1_1default__factory.html',1,'twisted']]]
+  ['line_5freceiver',['line_receiver',['../classtwisted_1_1line__receiver.html',1,'twisted']]]
 ];

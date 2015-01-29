@@ -7,8 +7,8 @@
 
 var indexSectionsWithContent =
 {
-  0: "bcdfilnprstw",
-  1: "bdlpr",
+  0: "bcfilnprstw",
+  1: "blpr",
   2: "bcfilnrstw"
 };
 

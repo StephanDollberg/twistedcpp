@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['forward',['forward',['../classtwisted_1_1protocol__core.html#a7d288307c72f1dc6c165ed89f96e8ef7',1,'twisted::protocol_core']]]
+  ['is_5fconnected',['is_connected',['../classtwisted_1_1protocol__core.html#a3ade72cb710c37bb997da1df161c6a7f',1,'twisted::protocol_core']]]
 ];
