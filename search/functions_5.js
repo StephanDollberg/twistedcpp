@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['next_5fpacket',['next_packet',['../classtwisted_1_1byte__receiver.html#ac174afe554894d541935f42d0230b732',1,'twisted::byte_receiver']]]
+  ['mixed_5freceiver',['mixed_receiver',['../classtwisted_1_1mixed__receiver.html#a13bb46e7fcf57c83a82b689191cf0df6',1,'twisted::mixed_receiver']]]
 ];
