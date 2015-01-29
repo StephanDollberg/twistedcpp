@@ -9,6 +9,27 @@
 
 namespace twisted {
 
+
+/**
+ * @brief Protocol that combines the line_receiver and the byte_receiver
+ *
+ * You can switch between the two modes by calling
+ *
+ * void set_byte_mode() and void set_line_mode();
+ *
+ * Provided callbacks:
+ *
+ * void bytes_received(const_buffer_iterator begin, const_buffer_iterator end);
+ *
+ * Will be called whenever N bytes have been received. [begin, end) is the data
+ * range. (In byte mode)
+ *
+ * void line_received(const_buffer_iterator begin, const_buffer_iterator end);
+ *
+ * Will be called whenever a line delimited by the delimiter has been received.
+ * [begin, end) is the data
+ * range. The range does not include the delimiter. (In line mode)
+ */
 template <typename ChildProtocol>
 class mixed_receiver
     : public twisted::protocol_core<
@@ -21,6 +42,10 @@ public:
     typedef boost::iterator_range<internal_buffer_type::const_iterator>
     const_buffer_type;
 
+    /**
+     * @brief constructor
+     * @param delimiter delimiter for the string mode
+     */
     mixed_receiver(std::string delimiter = std::string("\r\n"))
         : is_byte_mode(false), _current_begin(0), _current_count(0),
           _delimiter(std::move(delimiter)), _next_bytes_size(0),
@@ -59,6 +84,11 @@ public:
         }
     }
 
+    /**
+     * @brief Sends a line. Automatically adds the current delimiter
+     * @param begin range begin
+     * @param end range end
+     */
     template <typename Iter>
     void send_line(Iter begin, Iter end) {
         std::array<boost::asio::const_buffer, 2> buffers{
@@ -81,10 +111,19 @@ public:
             _read_buffer.end());
     }
 
+    /**
+     * @brief puts the mixed receiver into byte mode
+     */
     void set_byte_mode() { is_byte_mode = true; }
 
+    /**
+     * @brief puts the mixed receiver into line mode
+     */
     void set_line_mode() { is_byte_mode = false; }
 
+    /**
+     * @brief sets the size in bytes of the next packet to read (byte mode)
+     */
     void set_package_size(size_type package_size) {
         byte::set_package_size(package_size, _next_bytes_size, _read_buffer);
     }
