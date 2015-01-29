@@ -114,60 +114,60 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;        }</div>
 <div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;    }</div>
 <div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;</div>
-<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolFactory&gt;</div>
-<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="classtwisted_1_1reactor.html#a4e8f3787bac707d6871066f668a15c33">   51</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classtwisted_1_1reactor.html#a4e8f3787bac707d6871066f668a15c33">listen_tcp</a>(<span class="keywordtype">int</span> port, ProtocolFactory factory) {</div>
-<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {</div>
+<div class="line"><a name="l00050"></a><span class="lineno">   50</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolType, <span class="keyword">typename</span>... Args&gt;</div>
+<div class="line"><a name="l00051"></a><span class="lineno"><a class="line" href="classtwisted_1_1reactor.html#ae27524a671a0c10f2000d28f8e0a6ff4">   51</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classtwisted_1_1reactor.html#ae27524a671a0c10f2000d28f8e0a6ff4">listen_tcp</a>(<span class="keywordtype">int</span> port, Args&amp;&amp;... args) {</div>
+<div class="line"><a name="l00052"></a><span class="lineno">   52</span>&#160;        boost::asio::spawn(_io_service, [&amp;](boost::asio::yield_context yield) {</div>
 <div class="line"><a name="l00053"></a><span class="lineno">   53</span>&#160;            <span class="keyword">using</span> boost::asio::ip::tcp;</div>
 <div class="line"><a name="l00054"></a><span class="lineno">   54</span>&#160;            tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));</div>
-<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            tcp_core(acceptor, factory, yield);</div>
+<div class="line"><a name="l00055"></a><span class="lineno">   55</span>&#160;            tcp_core&lt;ProtocolType&gt;(acceptor, yield, std::forward&lt;Args&gt;(args)...);</div>
 <div class="line"><a name="l00056"></a><span class="lineno">   56</span>&#160;        });</div>
 <div class="line"><a name="l00057"></a><span class="lineno">   57</span>&#160;    }</div>
 <div class="line"><a name="l00058"></a><span class="lineno">   58</span>&#160;</div>
-<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolFactory&gt;</div>
-<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="classtwisted_1_1reactor.html#a6d184337b780aeb71a2834233de12a72">   68</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classtwisted_1_1reactor.html#a6d184337b780aeb71a2834233de12a72">listen_ssl</a>(<span class="keywordtype">int</span> port, ProtocolFactory factory, ssl_options&amp;&amp; ssl_opts) {</div>
+<div class="line"><a name="l00067"></a><span class="lineno">   67</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolType, <span class="keyword">typename</span>... Args&gt;</div>
+<div class="line"><a name="l00068"></a><span class="lineno"><a class="line" href="classtwisted_1_1reactor.html#a300814a147edce3dac9138c37d6569f1">   68</a></span>&#160;    <span class="keywordtype">void</span> <a class="code" href="classtwisted_1_1reactor.html#a300814a147edce3dac9138c37d6569f1">listen_ssl</a>(<span class="keywordtype">int</span> port, ssl_options&amp;&amp; ssl_opts, Args&amp;&amp;... args) {</div>
 <div class="line"><a name="l00069"></a><span class="lineno">   69</span>&#160;        std::shared_ptr&lt;ssl_options&gt; ssl_opts_ptr <span class="comment">// move capture</span></div>
 <div class="line"><a name="l00070"></a><span class="lineno">   70</span>&#160;            = std::make_shared&lt;ssl_options&gt;(std::move(ssl_opts));</div>
-<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        boost::asio::spawn(_io_service, [=](boost::asio::yield_context yield) {</div>
+<div class="line"><a name="l00071"></a><span class="lineno">   71</span>&#160;        boost::asio::spawn(_io_service, [&amp;, ssl_opts_ptr](boost::asio::yield_context yield) {</div>
 <div class="line"><a name="l00072"></a><span class="lineno">   72</span>&#160;            <span class="keyword">using</span> boost::asio::ip::tcp;</div>
 <div class="line"><a name="l00073"></a><span class="lineno">   73</span>&#160;            tcp::acceptor acceptor(_io_service, tcp::endpoint(tcp::v4(), port));</div>
-<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            ssl_impl(acceptor, factory, yield, ssl_opts_ptr);</div>
+<div class="line"><a name="l00074"></a><span class="lineno">   74</span>&#160;            ssl_impl&lt;ProtocolType&gt;(acceptor, yield, ssl_opts_ptr, std::forward&lt;Args&gt;(args)...);</div>
 <div class="line"><a name="l00075"></a><span class="lineno">   75</span>&#160;        });</div>
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;    }</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;</div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;<span class="keyword">private</span>:</div>
-<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolFactory&gt;</div>
+<div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolType, <span class="keyword">typename</span>... Args&gt;</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;    <span class="keywordtype">void</span> tcp_core(boost::asio::ip::tcp::acceptor&amp; acceptor,</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                  ProtocolFactory factory, boost::asio::yield_context yield) {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;                  boost::asio::yield_context yield, Args&amp;&amp;... args) {</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;        <span class="keyword">auto</span> socket_factory = [=]() {</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;            <span class="keywordflow">return</span> std::unique_ptr&lt;detail::tcp_socket&gt;(</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;                <span class="keyword">new</span> detail::tcp_socket(_io_service));</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;        };</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;</div>
-<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        run_loop(acceptor, std::move(factory), yield, socket_factory);</div>
+<div class="line"><a name="l00087"></a><span class="lineno">   87</span>&#160;        run_loop&lt;ProtocolType&gt;(acceptor, yield, socket_factory, std::forward&lt;Args&gt;(args)...);</div>
 <div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;    }</div>
 <div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;</div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolFactory&gt;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolType, <span class="keyword">typename</span>... Args&gt;</div>
 <div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;    <span class="keywordtype">void</span> ssl_impl(boost::asio::ip::tcp::acceptor&amp; acceptor,</div>
-<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                  ProtocolFactory factory, boost::asio::yield_context yield,</div>
-<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                  std::shared_ptr&lt;ssl_options&gt; ssl_context) {</div>
+<div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;                  boost::asio::yield_context yield,</div>
+<div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;                  std::shared_ptr&lt;ssl_options&gt; ssl_context, Args&amp;&amp;... args) {</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;        <span class="keyword">auto</span> socket_factory = [&amp;] {</div>
 <div class="line"><a name="l00095"></a><span class="lineno">   95</span>&#160;            <span class="keywordflow">return</span> std::unique_ptr&lt;detail::ssl_socket&gt;(</div>
 <div class="line"><a name="l00096"></a><span class="lineno">   96</span>&#160;                <span class="keyword">new</span> detail::ssl_socket(_io_service, *ssl_context));</div>
 <div class="line"><a name="l00097"></a><span class="lineno">   97</span>&#160;        };</div>
 <div class="line"><a name="l00098"></a><span class="lineno">   98</span>&#160;</div>
-<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        run_loop(acceptor, std::move(factory), yield, socket_factory);</div>
+<div class="line"><a name="l00099"></a><span class="lineno">   99</span>&#160;        run_loop&lt;ProtocolType&gt;(acceptor, yield, socket_factory, std::forward&lt;Args&gt;(args)...);</div>
 <div class="line"><a name="l00100"></a><span class="lineno">  100</span>&#160;    }</div>
 <div class="line"><a name="l00101"></a><span class="lineno">  101</span>&#160;</div>
-<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolFactory, <span class="keyword">typename</span> SocketFactory&gt;</div>
+<div class="line"><a name="l00102"></a><span class="lineno">  102</span>&#160;    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> ProtocolType, <span class="keyword">typename</span> SocketFactory, <span class="keyword">typename</span>... Args&gt;</div>
 <div class="line"><a name="l00103"></a><span class="lineno">  103</span>&#160;    <span class="keywordtype">void</span> run_loop(boost::asio::ip::tcp::acceptor&amp; acceptor,</div>
-<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                  ProtocolFactory factory, boost::asio::yield_context yield,</div>
-<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                  SocketFactory socket_factory) {</div>
+<div class="line"><a name="l00104"></a><span class="lineno">  104</span>&#160;                  boost::asio::yield_context yield,</div>
+<div class="line"><a name="l00105"></a><span class="lineno">  105</span>&#160;                  SocketFactory socket_factory, Args&amp;&amp;... args) {</div>
 <div class="line"><a name="l00106"></a><span class="lineno">  106</span>&#160;        <span class="keywordflow">while</span> (<span class="keyword">true</span>) {</div>
 <div class="line"><a name="l00107"></a><span class="lineno">  107</span>&#160;            <span class="keyword">auto</span> socket = socket_factory();</div>
 <div class="line"><a name="l00108"></a><span class="lineno">  108</span>&#160;</div>
 <div class="line"><a name="l00109"></a><span class="lineno">  109</span>&#160;            acceptor.async_accept(socket-&gt;lowest_layer(), yield);</div>
 <div class="line"><a name="l00110"></a><span class="lineno">  110</span>&#160;</div>
-<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <span class="keyword">auto</span> new_client = std::make_shared&lt;decltype(factory())&gt;(factory());</div>
+<div class="line"><a name="l00111"></a><span class="lineno">  111</span>&#160;            <span class="keyword">auto</span> new_client = std::make_shared&lt;ProtocolType&gt;(std::forward&lt;Args&gt;(args)...);</div>
 <div class="line"><a name="l00112"></a><span class="lineno">  112</span>&#160;            <span class="comment">// lazy init to avoid clutter in protocol constructors</span></div>
 <div class="line"><a name="l00113"></a><span class="lineno">  113</span>&#160;            new_client-&gt;set_socket(std::move(socket));</div>
 <div class="line"><a name="l00114"></a><span class="lineno">  114</span>&#160;            new_client-&gt;run_protocol();</div>
@@ -181,15 +181,15 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;} <span class="comment">// namespace twisted</span></div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;</div>
 <div class="line"><a name="l00124"></a><span class="lineno">  124</span>&#160;<span class="preprocessor">#endif</span></div>
-<div class="ttc" id="classtwisted_1_1reactor_html_a4e8f3787bac707d6871066f668a15c33"><div class="ttname"><a href="classtwisted_1_1reactor.html#a4e8f3787bac707d6871066f668a15c33">twisted::reactor::listen_tcp</a></div><div class="ttdeci">void listen_tcp(int port, ProtocolFactory factory)</div><div class="ttdoc">Registers a tcp listener. </div><div class="ttdef"><b>Definition:</b> reactor.hpp:51</div></div>
+<div class="ttc" id="classtwisted_1_1reactor_html_ae27524a671a0c10f2000d28f8e0a6ff4"><div class="ttname"><a href="classtwisted_1_1reactor.html#ae27524a671a0c10f2000d28f8e0a6ff4">twisted::reactor::listen_tcp</a></div><div class="ttdeci">void listen_tcp(int port, Args &amp;&amp;...args)</div><div class="ttdoc">Registers a tcp listener. </div><div class="ttdef"><b>Definition:</b> reactor.hpp:51</div></div>
 <div class="ttc" id="classtwisted_1_1reactor_html_a18bdcbe4725adff492f0e685d8b2f6fb"><div class="ttname"><a href="classtwisted_1_1reactor.html#a18bdcbe4725adff492f0e685d8b2f6fb">twisted::reactor::run</a></div><div class="ttdeci">void run(int thread_count=1)</div><div class="ttdoc">Starts the reactor. </div><div class="ttdef"><b>Definition:</b> reactor.hpp:26</div></div>
 <div class="ttc" id="classtwisted_1_1reactor_html"><div class="ttname"><a href="classtwisted_1_1reactor.html">twisted::reactor</a></div><div class="ttdoc">Reactor class to listen on certain protocols. </div><div class="ttdef"><b>Definition:</b> reactor.hpp:20</div></div>
+<div class="ttc" id="classtwisted_1_1reactor_html_a300814a147edce3dac9138c37d6569f1"><div class="ttname"><a href="classtwisted_1_1reactor.html#a300814a147edce3dac9138c37d6569f1">twisted::reactor::listen_ssl</a></div><div class="ttdeci">void listen_ssl(int port, ssl_options &amp;&amp;ssl_opts, Args &amp;&amp;...args)</div><div class="ttdoc">Registers a ssl/tls listener. </div><div class="ttdef"><b>Definition:</b> reactor.hpp:68</div></div>
 <div class="ttc" id="classtwisted_1_1reactor_html_a8c528baf37154d347366083f0f816846"><div class="ttname"><a href="classtwisted_1_1reactor.html#a8c528baf37154d347366083f0f816846">twisted::reactor::stop</a></div><div class="ttdeci">void stop()</div><div class="ttdoc">Stops the reactor. </div><div class="ttdef"><b>Definition:</b> reactor.hpp:37</div></div>
-<div class="ttc" id="classtwisted_1_1reactor_html_a6d184337b780aeb71a2834233de12a72"><div class="ttname"><a href="classtwisted_1_1reactor.html#a6d184337b780aeb71a2834233de12a72">twisted::reactor::listen_ssl</a></div><div class="ttdeci">void listen_ssl(int port, ProtocolFactory factory, ssl_options &amp;&amp;ssl_opts)</div><div class="ttdoc">Registers a ssl/tls listener. </div><div class="ttdef"><b>Definition:</b> reactor.hpp:68</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Dec 7 2014 23:16:08 for twistedcpp by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Jan 29 2015 22:34:44 for twistedcpp by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.6
 </small></address>
