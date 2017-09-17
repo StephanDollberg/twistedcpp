@@ -12,6 +12,7 @@
 #include <boost/asio/high_resolution_timer.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <boost/ref.hpp>
+#include <boost/utility/in_place_factory.hpp>
 
 #ifndef NDEBUG
 #include <iostream>

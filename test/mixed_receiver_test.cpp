@@ -4,7 +4,6 @@
 
 #include "../include/twisted/mixed_receiver.hpp"
 #include "../include/twisted/reactor.hpp"
-#include "../include/twisted/default_factory.hpp"
 
 #include <boost/range/algorithm.hpp>
 #include <boost/asio/read.hpp>

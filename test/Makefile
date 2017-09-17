@@ -1,4 +1,4 @@
-DEFINES= -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP
+DEFINES= -D_GLIBCXX_USE_SCHED_YIELD -D_GLIBCXX_USE_NANOSLEEP -DBOOST_COROUTINE_NO_DEPRECATION_WARNING=1 -DBOOST_COROUTINES_NO_DEPRECATION_WARNING
 
 SSL_LIBS =  -lssl -lcrypto
 
@@ -14,7 +14,7 @@ ifeq ($(UNAME), Darwin)
 	LIBS= -lboost_coroutine-mt -lboost_context-mt -lboost_system-mt $(SSL_LIBS)
 endif
 
-ARGS= -std=c++11 -g -Wall -Werror -Wextra -pedantic-errors  $(INCLUDES) $(DEFINES)
+ARGS= -std=c++11 -g -Wall -Werror -Wextra -pedantic-errors -pthread $(INCLUDES) $(DEFINES)
 
 ifeq ($(CXX),clang++-3.5)
 	ADD_INC_FLAGS = -nostdinc++ -I/usr/local/lib/llvm-3.5/include/c++/v1 -fno-omit-frame-pointer
