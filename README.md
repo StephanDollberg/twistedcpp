@@ -30,6 +30,7 @@ Check the [Tutorials] (https://github.com/StephanDollberg/twistedcpp/wiki/Tutori
 
 ### Using/Installing twistedcpp
 
-twistedcpp is header only so you don't need to build anything. You can either add include/twisted to your compiler include path(e.g.: -I/path/to/twisted/include or put it to /usr/local/include) or copy the files to your local project. However, twistedcpp depends on boost asio and if the ssl part is used also on openssl. Meaning that you have to link against -lboost_coroutine, -lboost_context, -lboost_system, -lssl and -lcrypto
+twistedcpp is header only so you don't need to build anything. You can either add include/twisted to your compiler include path(e.g.: 
+`-I/path/to/twisted/include` or put it to `/usr/local/include`) or copy the files to your local project. However, twistedcpp depends on boost asio and if the ssl part is used also on openssl. Meaning that you have to link against `-lboost_coroutine`, `-lboost_context`, `-lboost_system`, `-lssl` and `-lcrypto`.
 
 More work, help and projects very appreciated. 
