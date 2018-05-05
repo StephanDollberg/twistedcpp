@@ -3,6 +3,7 @@
 
 #include "detail/sockets.hpp"
 
+#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/optional.hpp>

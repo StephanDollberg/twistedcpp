@@ -1,6 +1,7 @@
 #ifndef TWISTEDCPP_SOCKETS_HPP
 #define TWISTEDCPP_SOCKETS_HPP
 
+#include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/spawn.hpp>
