@@ -3,9 +3,12 @@
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#ifdef TWISTEDCPP_NEED_SSL
 #include <boost/asio/ssl.hpp>
+#endif
 #include <boost/asio/spawn.hpp>
 #include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
 
 namespace twisted {
 
@@ -72,9 +75,16 @@ public:
 
     virtual void close() { _socket.close(); }
 
+#if BOOST_VERSION >= 107000
+	virtual boost::asio::io_context& get_io_service() {
+		return ((boost::asio::io_context&)_socket.get_executor().context());
+	}
+
+#else
     virtual boost::asio::io_service& get_io_service() {
         return _socket.get_io_service();
     }
+#endif
 
     boost::asio::ip::tcp::socket& lowest_layer() { return _socket; }
 
@@ -84,6 +94,7 @@ private:
     boost::asio::ip::tcp::socket _socket;
 };
 
+#ifdef TWISTEDCPP_NEED_SSL
 class ssl_socket : public socket_base {
 public:
     ssl_socket(boost::asio::io_service& io_service,
@@ -143,6 +154,7 @@ public:
 private:
     boost::asio::ssl::stream<boost::asio::ip::tcp::socket> _socket;
 };
+#endif
 } // namespace detail
 
 } // namespace twisted
