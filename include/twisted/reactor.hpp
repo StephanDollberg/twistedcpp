@@ -2,7 +2,9 @@
 #define TWISTEDCPP_REACTOR_HPP
 
 #include "detail/sockets.hpp"
+#ifdef TWISTEDCPP_NEED_SSL
 #include "ssl_options.hpp"
+#endif
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -64,6 +66,7 @@ public:
      * href="http://www.boost.org/doc/libs/1_57_0/doc/html/boost_asio/reference/ssl__context.html">boost::asio
      * ssl context</a> - sets the ssl/tls options
      */
+#ifdef TWISTEDCPP_NEED_SSL
     template <typename ProtocolType, typename... Args>
     void listen_ssl(int port, ssl_options&& ssl_opts, Args&&... args) {
         std::shared_ptr<ssl_options> ssl_opts_ptr // move capture
@@ -74,6 +77,7 @@ public:
             ssl_impl<ProtocolType>(acceptor, yield, ssl_opts_ptr, std::forward<Args>(args)...);
         });
     }
+#endif
 
 private:
     template <typename ProtocolType, typename... Args>
@@ -87,6 +91,7 @@ private:
         run_loop<ProtocolType>(acceptor, yield, socket_factory, std::forward<Args>(args)...);
     }
 
+#ifdef TWISTEDCPP_NEED_SSL
     template <typename ProtocolType, typename... Args>
     void ssl_impl(boost::asio::ip::tcp::acceptor& acceptor,
                   boost::asio::yield_context yield,
@@ -98,6 +103,7 @@ private:
 
         run_loop<ProtocolType>(acceptor, yield, socket_factory, std::forward<Args>(args)...);
     }
+#endif
 
     template <typename ProtocolType, typename SocketFactory, typename... Args>
     void run_loop(boost::asio::ip::tcp::acceptor& acceptor,
